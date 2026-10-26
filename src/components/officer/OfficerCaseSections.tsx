@@ -1,0 +1,489 @@
+import { formatDemoDate } from "@/lib/demo-student";
+import { formatEventTime } from "@/lib/complaint-tracking";
+import { fileSize } from "@/lib/complaint-flow";
+import {
+  OFFICER_DEMO_CLOCK,
+  officerCells,
+  officerSla,
+  type ComplaintQueueItem,
+} from "@/lib/officer-model";
+import { getInstitutionComplaintHistory } from "@/lib/patterns/institution-patterns";
+import { institutionPatternPolicy } from "@/lib/patterns/types";
+import { formatDuration } from "@/lib/sla/sla";
+import { prototypeSlaPolicy } from "@/lib/sla/policy";
+import { OfficerStatus, PriorityBadge, SlaBadge } from "./OfficerBadges";
+export function OfficerCaseHeader({ item }: { item: ComplaintQueueItem }) {
+  return (
+    <header className="officer-case-header">
+      <p className="eyebrow">{item.id} / FICTIONAL COMPLAINT</p>
+      <h1>{item.title}</h1>
+      <p className="officer-case-institution">{item.institution}</p>
+      <div className="officer-badges">
+        <OfficerStatus status={item.status} />
+        <PriorityBadge priority={item.priority} />
+      </div>
+      <dl className="officer-facts">
+        <div>
+          <dt>Category</dt>
+          <dd>{item.category}</dd>
+        </div>
+        <div>
+          <dt>Submitted</dt>
+          <dd>{formatDemoDate(item.submittedAt)}</dd>
+        </div>
+        <div>
+          <dt>
+            {item.routingStatus === "manual-review" &&
+            !item.overriddenByOfficer
+              ? "Review status"
+              : "Assigned demo cell"}
+          </dt>
+          <dd>
+            {item.routingStatus === "manual-review" &&
+            !item.overriddenByOfficer
+              ? "Manual review queue"
+              : officerCells.find((c) => c.id === item.cellId)?.name}
+          </dd>
+        </div>
+        <div>
+          <dt>Last activity</dt>
+          <dd>{formatEventTime(item.updatedAt)} IST</dd>
+        </div>
+      </dl>
+    </header>
+  );
+}
+export function CaseSummaryPanel({ item }: { item: ComplaintQueueItem }) {
+  if (item.intelligence) {
+    const intelligence = item.intelligence;
+    const recommendedCell = officerCells.find(
+      (cell) => cell.id === intelligence.recommendedCellId,
+    );
+    const currentCell = officerCells.find((cell) => cell.id === item.cellId);
+    return (
+      <section className="officer-panel officer-summary">
+        <p className="eyebrow">01 / SYSTEM ANALYSIS</p>
+        <h2>Complaint understanding.</h2>
+        <p className="officer-summary-text">{intelligence.summary}</p>
+        <dl className="officer-facts">
+          <div>
+            <dt>Identified category</dt>
+            <dd>{intelligence.category}</dd>
+          </div>
+          <div>
+            <dt>Priority</dt>
+            <dd>{item.priority}</dd>
+          </div>
+          <div>
+            <dt>Urgency reason</dt>
+            <dd>{intelligence.urgencyReason}</dd>
+          </div>
+          <div>
+            <dt>System recommendation</dt>
+            <dd>{recommendedCell?.name || "Manual review required"}</dd>
+          </div>
+          <div>
+            <dt>Current Responsibility</dt>
+            <dd>
+              {item.routingStatus === "manual-review" &&
+              !item.overriddenByOfficer
+                ? "Manual review queue"
+                : currentCell?.name || "Manual review queue"}
+            </dd>
+          </div>
+          <div>
+            <dt>Routing status</dt>
+            <dd>
+              {item.routingStatus === "manual-review"
+                ? "Manual review required"
+                : item.overriddenByOfficer
+                  ? "Officer override"
+                  : intelligence.reviewRecommended
+                    ? "Routed — officer review recommended"
+                    : "Routed"}
+            </dd>
+          </div>
+          <div>
+            <dt>Confidence</dt>
+            <dd>
+              {Math.round(intelligence.confidence * 100)}% ·{" "}
+              {intelligence.needsManualReview
+                ? "manual review required"
+                : intelligence.reviewRecommended
+                  ? "review recommended"
+                  : "automatic routing"}
+            </dd>
+          </div>
+          <div>
+            <dt>Source</dt>
+            <dd>
+              {intelligence.source === "AI"
+                ? "AI-assisted analysis"
+                : intelligence.source === "Fallback Rules"
+                  ? "Fallback rules"
+                  : intelligence.source}
+            </dd>
+          </div>
+        </dl>
+        <p className="officer-fine">
+          {intelligence.routingReason}{" "}
+          {intelligence.manualReviewReason
+            ? `Manual review: ${intelligence.manualReviewReason}`
+            : ""}
+        </p>
+        {item.overriddenByOfficer && (
+          <p className="officer-fine" role="status">
+            The original system recommendation is preserved above. The current
+            officer decision is recorded in the case history.
+          </p>
+        )}
+      </section>
+    );
+  }
+  return (
+    <section className="officer-panel officer-summary">
+      <p className="eyebrow">01 / CASE SUMMARY</p>
+      <h2>The issue, at a glance.</h2>
+      <p className="officer-summary-text">{item.summary.text}</p>
+      <p className="officer-fine">
+        {item.summary.source}. No LLM generated this summary. Verify against the
+        original complaint and supporting records.
+      </p>
+    </section>
+  );
+}
+export function EvidencePanel({ item }: { item: ComplaintQueueItem }) {
+  return (
+    <section className="officer-panel">
+      <p className="eyebrow">02 / EVIDENCE</p>
+      <h2>The supporting record.</h2>
+      <p className="officer-fine">
+        Fictional metadata only. No cloud files, remote access or downloads.
+      </p>
+      {item.evidence.length ? (
+        <ul className="officer-evidence">
+          {item.evidence.map((file) => (
+            <li key={file.id}>
+              <span aria-hidden="true">↳</span>
+              <div>
+                <strong>{file.name}</strong>
+                <p>
+                  {file.type} · {fileSize(file.size)}
+                </p>
+                <small>
+                  Listed by {file.by} · {formatDemoDate(file.at)}
+                </small>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>
+          No evidence listed in this sample. Request clarification before
+          relying on unsupported details.
+        </p>
+      )}
+    </section>
+  );
+}
+export function StudentResponsesPanel({ item }: { item: ComplaintQueueItem }) {
+  const responses = [...(item.studentResponses ?? [])].sort(
+    (a, b) => Date.parse(a.at) - Date.parse(b.at),
+  );
+  if (responses.length === 0) return null;
+  return (
+    <section className="officer-panel" aria-labelledby="student-responses-heading">
+      <p className="eyebrow">STUDENT RESPONSES</p>
+      <h2 id="student-responses-heading">Information provided by the student.</h2>
+      {responses.map((response, index) => {
+        const requestEvent = item.events.find(
+          (event) => event.id === response.requestEventId,
+        );
+        return (
+          <div className="officer-student-response" key={response.id}>
+            <h3>Response received · {formatEventTime(response.at)} IST</h3>
+            {requestEvent && (
+              <p className="officer-fine">
+                Response to: {requestEvent.explanation}
+              </p>
+            )}
+            <p className="officer-preserve">{response.text}</p>
+            {response.evidence.length > 0 && (
+              <>
+                <h4>Evidence metadata</h4>
+                <ul className="officer-evidence">
+                  {response.evidence.map((file) => (
+                    <li key={file.id}>
+                      <span aria-hidden="true">↳</span>
+                      <div>
+                        <strong>{file.name}</strong>
+                        <p>
+                          {file.type} · {fileSize(file.size)}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {index < responses.length - 1 && <hr />}
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+export function OriginalOfficerComplaint({
+  item,
+}: {
+  item: ComplaintQueueItem;
+}) {
+  return (
+    <details className="officer-panel officer-original">
+      <summary>Original complaint & student details</summary>
+      <p className="officer-preserve">{item.description}</p>
+      <dl className="officer-facts">
+        <div>
+          <dt>Demo student</dt>
+          <dd>{item.student.name}</dd>
+        </div>
+        <div>
+          <dt>Incident date</dt>
+          <dd>{item.student.incidentDate || "Not provided"}</dd>
+        </div>
+        <div>
+          <dt>Prior institution contact</dt>
+          <dd>{item.student.contacted}</dd>
+        </div>
+      </dl>
+    </details>
+  );
+}
+export function OfficerCaseTimeline({ item }: { item: ComplaintQueueItem }) {
+  return (
+    <section className="officer-panel">
+      <p className="eyebrow">03 / CASE HISTORY</p>
+      <h2>A visible trail of decisions.</h2>
+      <p className="officer-fine">
+        Prewritten events plus local demo actions. This is not a production
+        audit log.
+      </p>
+      <ol className="officer-events">
+        {item.events.map((event) => (
+          <li key={event.id}>
+            <div>
+              <time dateTime={event.at}>{formatEventTime(event.at)} IST</time>
+              <span>{event.audit?.actor_name || event.actor}{event.audit?.actor_role ? ` / ${event.audit.actor_role}` : ""}{event.audit?.actor_cell ? ` / ${officerCells.find(c => c.id === event.audit?.actor_cell)?.name || event.audit.actor_cell}` : ""}</span>
+            </div>
+            <div>
+              <h3>{event.title}</h3>
+              <p className="officer-preserve">{event.explanation}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+export function InstitutionHistoryPanel({
+  item,
+  cases,
+}: {
+  item: ComplaintQueueItem;
+  cases: ComplaintQueueItem[];
+}) {
+  const history = getInstitutionComplaintHistory(
+    cases,
+    item.institution,
+    OFFICER_DEMO_CLOCK,
+  );
+  const currentCluster = history.clusters.find((cluster) =>
+    cluster.complaintIds.includes(item.id),
+  );
+  return (
+    <section className="officer-panel">
+      <p className="eyebrow">INSTITUTION COMPLAINT HISTORY / DEMO</p>
+      <h2>{history.institution}</h2>
+      <dl className="officer-history-counts">
+        <div>
+          <dt>Complaints · 90 days</dt>
+          <dd>{history.total}</dd>
+        </div>
+        <div>
+          <dt>Last 30 days</dt>
+          <dd>{history.recentCount}</dd>
+        </div>
+        <div>
+          <dt>Open</dt>
+          <dd>{history.open}</dd>
+        </div>
+        <div>
+          <dt>Resolved</dt>
+          <dd>{history.resolved}</dd>
+        </div>
+        <div>
+          <dt>Escalated</dt>
+          <dd>{history.escalated}</dd>
+        </div>
+      </dl>
+      <p>Top category: {history.topCategory}</p>
+      {currentCluster ? (
+        <div className="officer-institution-cluster">
+          <h3>Repeated issue pattern detected</h3>
+          <p>{currentCluster.label}</p>
+          <p>
+            This complaint is part of a related group of{" "}
+            {currentCluster.complaintCount} complaints;{" "}
+            {currentCluster.recentCount} were submitted in the last{" "}
+            {institutionPatternPolicy.patternWindowDays} days.
+          </p>
+          <p>
+            {currentCluster.recentCount === 0
+              ? "No recent activity"
+              : currentCluster.trend === "New pattern"
+              ? "Newly observed issue"
+              : `${currentCluster.trend} complaint activity`}
+          </p>
+          {currentCluster.commonIssueSignals.length > 0 && (
+            <p>
+              Common issue signals:{" "}
+              {currentCluster.commonIssueSignals.join(", ")}.
+            </p>
+          )}
+          {currentCluster.recentCount >=
+            institutionPatternPolicy.repeatOccurrenceMinimum && (
+            <p>
+              Repeated occurrence: {currentCluster.recentCount} complaints in
+              this issue group in the last{" "}
+              {institutionPatternPolicy.patternWindowDays} days.
+            </p>
+          )}
+        </div>
+      ) : (
+        <p>No related issue group is currently identified in this sample.</p>
+      )}
+      <div className="officer-history-breakdowns">
+        <div>
+          <h3>Workflow status</h3>
+          <ul>
+            {Object.entries(history.statusBreakdown).map(([status, count]) => (
+              <li key={status}>
+                <span>{status}</span>
+                <strong>{count}</strong>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h3>Priority context</h3>
+          <ul>
+            {Object.entries(history.priorityBreakdown).map(
+              ([priority, count]) => (
+                <li key={priority}>
+                  <span>{priority}</span>
+                  <strong>{count}</strong>
+                </li>
+              ),
+            )}
+          </ul>
+        </div>
+      </div>
+      <p className="officer-fine">
+        These counts and issue signals derive from fictional demo records. They
+        are decision-support context, not findings about the institution.
+      </p>
+    </section>
+  );
+}
+export function OwnerSlaPanel({ item }: { item: ComplaintQueueItem }) {
+  const sla = officerSla(item);
+  return (
+    <section className="officer-panel">
+      <p className="eyebrow">CURRENT RESPONSIBILITY</p>
+      <h2>
+        {item.routingStatus === "manual-review" && !item.overriddenByOfficer
+          ? "Manual review queue"
+          : officerCells.find((c) => c.id === item.cellId)?.name}
+      </h2>
+      <p className="officer-fine">
+        {item.routingStatus === "manual-review" && !item.overriddenByOfficer
+          ? "This case is in an unassigned manual review queue; no officer is assigned."
+          : "Prototype routing configuration. Fictional owner; no official AICTE mapping."}
+      </p>
+      <div className="officer-owner-state">
+        <OfficerStatus status={item.status} />
+        <PriorityBadge priority={item.priority} />
+      </div>
+      <hr />
+      <p className="eyebrow">RESPONSE WINDOW / DEMO RULE</p>
+      <SlaBadge item={item} />
+      <h3>SLA status: {sla.state === "On Track" ? "Normal" : sla.state}</h3>
+      <p>Priority target: {sla.targetHours} hours under prototype policy.</p>
+      {sla.deadlineAt ? (
+        <p>
+          Deadline:{" "}
+          {new Intl.DateTimeFormat("en-IN", {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone: "Asia/Kolkata",
+          }).format(new Date(sla.deadlineAt))}
+        </p>
+      ) : (
+        <p>No SLA deadline could be calculated from this record.</p>
+      )}
+      <p>
+        {sla.state === "Complete"
+          ? "Response window completed."
+          : sla.state === "Paused"
+            ? `Paused while waiting for student · ${formatDuration(sla.remainingMs)}`
+            : formatDuration(sla.remainingMs)}
+      </p>
+      {sla.paused && (
+        <p>
+          Student information requests pause the officer clock. Recorded paused
+          time: {formatDuration(sla.pausedMs)}.
+        </p>
+      )}
+      {sla.escalationRecommended && (
+        <div className="officer-escalation-recommendation">
+          <strong>Escalation recommended</strong>
+          <p>
+            This case is overdue beyond the prototype grace period. An officer
+            may use the existing Escalate action; no automatic state or owner
+            change is made.
+          </p>
+        </div>
+      )}
+      {item.escalationReason && (
+        <p className="officer-preserve">
+          Escalation reason: {item.escalationReason}
+        </p>
+      )}
+      <p className="officer-fine">
+        {prototypeSlaPolicy.label}. Student information requests pause the
+        officer response clock. The fixed monitoring clock is{" "}
+        {formatEventTime(OFFICER_DEMO_CLOCK)} IST; this is not an official
+        AICTE SLA.
+      </p>
+    </section>
+  );
+}
+export function SuggestedNextAction({ item }: { item: ComplaintQueueItem }) {
+  return (
+    <section className="officer-panel">
+      <p className="eyebrow">SUGGESTED NEXT ACTION / MOCK</p>
+      <h2>{item.resolution ? "Outcome recorded." : "A possible next step."}</h2>
+      <p>
+        {item.resolution
+          ? "This demo case is resolved. Review the recorded outcome and history."
+          : item.summary.suggestion}
+      </p>
+      <p className="officer-fine">
+        {item.resolution
+          ? "No further case actions are enabled."
+          : item.summary.reason}{" "}
+        Prewritten guidance, not AI advice.
+      </p>
+    </section>
+  );
+}
