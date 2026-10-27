@@ -1,4 +1,9 @@
 "use client";
+import {
+  cellDisplayName,
+  institutionDisplayName,
+  normalizeInstitutionName,
+} from "@/lib/presentation";
 
 import Link from "next/link";
 import { reviewCells } from "@/lib/cells";
@@ -14,6 +19,7 @@ import {
 } from "@/lib/sla/analytics";
 import { prototypeSlaPolicy } from "@/lib/sla/policy";
 import { useOfficerDemo } from "./OfficerDemoProvider";
+import { useComplaintStore } from "@/components/ComplaintStoreProvider";
 import { PriorityBadge, SlaBadge } from "./OfficerBadges";
 
 const slaStates = [
@@ -37,43 +43,55 @@ function CaseLink({ item }: { item: ComplaintQueueItem }) {
 
 export function OfficerCommandCenter() {
   const { cases, basePath } = useOfficerDemo();
+  const { mode } = useComplaintStore();
+  const asOf = useMemo(
+    () => (mode === "persistent" ? new Date().toISOString() : OFFICER_DEMO_CLOCK),
+    [mode],
+  );
   const [cell, setCell] = useState("all");
   const [status, setStatus] = useState("all");
   const [filters, setFilters] = useState<CommandCenterFilters>(
     defaultCommandCenterFilters,
   );
   const filteredCases = useMemo(
-    () => filterCommandCenterCases(cases.filter(item => (cell === "all" || item.cellId === cell) && (status === "all" || item.status === status)), OFFICER_DEMO_CLOCK, filters),
-    [cases, filters, cell, status],
+    () => filterCommandCenterCases(cases.filter(item => (cell === "all" || item.cellId === cell) && (status === "all" || item.status === status)), asOf, filters),
+    [cases, filters, cell, status, asOf],
   );
   const metrics = useMemo(
     () =>
       calculateCommandCenterMetrics(
         filteredCases,
-        OFFICER_DEMO_CLOCK,
+        asOf,
         filters.windowDays,
       ),
-    [filteredCases, filters.windowDays],
+    [filteredCases, filters.windowDays, asOf],
   );
   const categories = [...new Set(cases.map((item) => item.category))].sort();
-  const institutions = [...new Set(cases.map((item) => item.institution))].sort();
+  const institutions = [
+    ...new Map(
+      cases.map((item) => [
+        normalizeInstitutionName(item.institution),
+        item.institution,
+      ]),
+    ).values(),
+  ].sort();
 
   return (
     <>
       <div className="officer-page-heading">
-        <p className="eyebrow">OPERATIONS / PROTOTYPE MONITORING</p>
+        <p className="eyebrow">OPERATIONS / MONITORING</p>
         <h1>Command center</h1>
         <p>
-          A demo view of response windows, workload signals, and meaningful
+          A view of response windows, workload signals, and meaningful
           case activity.
         </p>
       </div>
       <p className="officer-notice">
-        Prototype / demo policy only. SLA targets and escalation recommendations
+        Service-level targets are configurable by the administering authority. SLA targets and escalation recommendations
         do not change case status, priority, ownership, or routing.
       </p>
       <section className="officer-panel command-center-filters" aria-label="Command center filters">
-        <label>Cell<select value={cell} onChange={e => setCell(e.target.value)}><option value="all">All configured cells</option>{reviewCells.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+        <label>Cell<select value={cell} onChange={e => setCell(e.target.value)}><option value="all">All configured cells</option>{reviewCells.map(c => <option key={c.id} value={c.id}>{cellDisplayName(c.name)}</option>)}</select></label>
         <label>Status<select value={status} onChange={e => setStatus(e.target.value)}><option value="all">All statuses</option>{lifecycleStatuses.map(s => <option key={s}>{s}</option>)}</select></label>
         <label>
           Monitoring window
@@ -117,7 +135,9 @@ export function OfficerCommandCenter() {
           >
             <option value="all">All institutions</option>
             {institutions.map((institution) => (
-              <option key={institution}>{institution}</option>
+              <option key={institution} value={institution}>
+                {institutionDisplayName(institution)}
+              </option>
             ))}
           </select>
         </label>
@@ -158,9 +178,9 @@ export function OfficerCommandCenter() {
         <p className="officer-fine">
           Average resolution time:{" "}
           {metrics.averageResolutionHours === null
-            ? "Not available for this sample"
+            ? "Not available for this view"
             : `${metrics.averageResolutionHours.toFixed(1)} hours`}
-          . Filtered to {filteredCases.length} unique fictional complaints.
+          . Filtered to {filteredCases.length} unique complaints.
         </p>
       </section>
 
@@ -206,7 +226,7 @@ export function OfficerCommandCenter() {
               {metrics.institutions.map((institution) => (
                 <li key={institution.institution}>
                   <div>
-                    <strong>{institution.institution}</strong>
+                    <strong>{institutionDisplayName(institution.institution)}</strong>
                     <p>Top category: {institution.topCategory}</p>
                     {institution.repeatedIssue && <p>Repeated issue signal: {institution.repeatedIssue}</p>}
                   </div>
@@ -230,7 +250,7 @@ export function OfficerCommandCenter() {
         </section>
 
         <section className="officer-panel">
-          <p className="eyebrow">REPEATED ISSUE PATTERNS / DEMO DATA</p>
+          <p className="eyebrow">REPEATED ISSUE PATTERNS</p>
           <h2>Institution issue patterns</h2>
           {metrics.patterns.length ? (
             <ul className="command-center-cases">
@@ -242,10 +262,10 @@ export function OfficerCommandCenter() {
               ))}
             </ul>
           ) : (
-            <p>No repeated issue cluster in the filtered sample.</p>
+            <p>No repeated issue cluster in the filtered records.</p>
           )}
           <p className="officer-fine">
-            Signals reuse the prototype institution-history clustering and are
+            Signals reuse the institution-history clustering and are
             not findings about an institution.
           </p>
         </section>
@@ -261,7 +281,7 @@ export function OfficerCommandCenter() {
                     <Link href={`${basePath}/complaints/${event.complaintId}`}>
                       {event.complaintId} · {event.title}
                     </Link>
-                    <p>{event.institution}</p>
+                    <p>{institutionDisplayName(event.institution)}</p>
                   </div>
                   <time dateTime={event.at}>{formatEventTime(event.at)}</time>
                 </li>
@@ -273,8 +293,10 @@ export function OfficerCommandCenter() {
         </section>
       </div>
       <p className="officer-fine">
-        Fixed scenario clock: {formatEventTime(OFFICER_DEMO_CLOCK)} IST. A
-        recommendation is advisory only; officers retain control of escalation.
+        {mode === "persistent"
+          ? `Reporting as of ${formatEventTime(asOf)} IST. `
+          : `Illustrative scenario as of ${formatEventTime(asOf)} IST. `}
+        A recommendation is advisory only; officers retain control of escalation.
         {filters.sla === "all" ? "" : ` Filter: ${filters.sla}.`}
       </p>
     </>

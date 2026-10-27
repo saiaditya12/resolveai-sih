@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { type Complaint, formatDemoDate } from "@/lib/demo-student";
+import { institutionDisplayName } from "@/lib/presentation";
 import { StatusBadge } from "./StatusBadge";
 import { EmptyComplaintsState } from "./EmptyComplaintsState";
 export function ComplaintList({ items }: { items: Complaint[] }) {
@@ -42,7 +43,7 @@ export function ComplaintList({ items }: { items: Complaint[] }) {
       ) : (
         <>
           <p className="result-count" aria-live="polite">
-            {filtered.length} demo{" "}
+            {filtered.length}{" "}
             {filtered.length === 1 ? "complaint" : "complaints"}
           </p>
           <div className="complaint-table-head" aria-hidden="true">
@@ -63,7 +64,7 @@ export function ComplaintList({ items }: { items: Complaint[] }) {
                       {c.id} <span> / {c.category}</span>
                     </span>
                     <h3>{c.title}</h3>
-                    <p>{c.institution}</p>
+                    <p>{institutionDisplayName(c.institution)}</p>
                   </div>
                   <StatusBadge status={c.status} />
                   <time dateTime={c.updatedAt}>

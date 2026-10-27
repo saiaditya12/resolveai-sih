@@ -8,6 +8,7 @@ import type {
   RequestedAction,
 } from "./complaint-tracking";
 import { calculateSla, formatDuration } from "./sla/sla.ts";
+import { normalizeInstitutionName } from "./presentation.ts";
 export type ComplaintPriority = "Low" | "Medium" | "High" | "Critical";
 export interface OfficerCell {
   id: string;
@@ -32,8 +33,10 @@ export interface SimilarComplaint {
 export interface InstitutionHistory {
   institution: string;
   total: number;
+  recentCount: number;
   open: number;
   resolved: number;
+  escalated: number;
   topCategory: string;
   pattern: string;
 }
@@ -222,7 +225,8 @@ export function filterQueue(
           (filters.sla === "Normal" && officerSla(c).state === "On Track") ||
           (filters.sla === "Resolved" && officerSla(c).state === "Complete")) &&
         (filters.institution === "all" ||
-          c.institution === filters.institution),
+          normalizeInstitutionName(c.institution) ===
+            normalizeInstitutionName(filters.institution)),
     )
     .sort((a, b) => {
       if (filters.sort === "priority")
@@ -258,26 +262,45 @@ export function filterQueue(
 export function institutionHistory(
   items: ComplaintQueueItem[],
   institution: string,
+  asOf = OFFICER_DEMO_CLOCK,
 ): InstitutionHistory {
+  const end = Date.parse(asOf);
+  const normalizedInstitution = normalizeInstitutionName(institution);
   const recent = items.filter(
-    (c) =>
-      c.institution === institution &&
-      Date.parse(c.submittedAt) >=
-        Date.parse(OFFICER_DEMO_CLOCK) - 90 * 86400000,
+    (caseItem) => {
+      const submittedAt = Date.parse(caseItem.submittedAt);
+      return (
+        normalizeInstitutionName(caseItem.institution) === normalizedInstitution &&
+        Number.isFinite(submittedAt) &&
+        submittedAt <= end &&
+        submittedAt >= end - 90 * 86400000
+      );
+    },
   );
+  const recentCategories = recent.filter((caseItem) => {
+    const submittedAt = Date.parse(caseItem.submittedAt);
+    return submittedAt >= end - 30 * 86400000;
+  });
   const counts: Record<string, number> = {};
-  recent.forEach((c) => (counts[c.category] = (counts[c.category] || 0) + 1));
+  recentCategories.forEach(
+    (caseItem) => (counts[caseItem.category] = (counts[caseItem.category] || 0) + 1),
+  );
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
   return {
     institution,
     total: recent.length,
+    recentCount: recentCategories.length,
     open: recent.filter(isOpenCase).length,
-    resolved: recent.filter((c) => !isOpenCase(c)).length,
+    resolved: recent.filter((caseItem) =>
+      ["Resolved", "Closed"].includes(caseItem.status),
+    ).length,
+    escalated: recent.filter((caseItem) => caseItem.status === "Escalated")
+      .length,
     topCategory: top?.[0] || "None",
     pattern:
       top && top[1] > 1
-        ? `${top[1]} ${top[0].toLowerCase()} cases in this demo dataset`
-        : "No repeated category in this sample",
+        ? `${top[1]} ${top[0].toLowerCase()} cases in this reporting period`
+        : "No repeated category in this reporting period",
   };
 }
 function validDueDate(value: string, today: string) {

@@ -1,4 +1,5 @@
 "use client";
+import { cellDisplayName, institutionDisplayName } from "@/lib/presentation";
 import Link from "next/link";
 import { useState } from "react";
 import { useOfficerDemo } from "./OfficerDemoProvider";
@@ -54,7 +55,7 @@ export function QueueFiltersPanel({
   ];
   const labels: Record<string, string> = {
     all: "All",
-    mine: "My demo cell",
+    mine: "My cell",
     priority: "Highest Priority",
     newest: "Newest",
     oldest: "Oldest",
@@ -73,10 +74,12 @@ export function QueueFiltersPanel({
             {options.map((value) => (
               <option key={value} value={value}>
                 {key === "scope" && value === "all"
-                  ? "All demo cells"
+                  ? "All cells"
                   : key === "status" && value !== "all"
                     ? statusLabel(value as ComplaintQueueItem["status"])
-                    : labels[value] || value}
+                    : key === "institution"
+                      ? institutionDisplayName(value)
+                      : labels[value] || value}
               </option>
             ))}
           </select>
@@ -106,12 +109,12 @@ export function QueueRows({ items }: { items: ComplaintQueueItem[] }) {
                 {item.title} <span aria-hidden="true">↗</span>
               </Link>
             </h3>
-            <p>{item.institution}</p>
+            <p>{institutionDisplayName(item.institution)}</p>
             <p className="queue-cell">
               {item.routingStatus === "manual-review" &&
               !item.overriddenByOfficer
                 ? "Manual review queue"
-                : officerCells.find((c) => c.id === item.cellId)?.name}
+                : cellDisplayName(officerCells.find((c) => c.id === item.cellId)?.name)}
             </p>
             {item.routingStatus === "manual-review" && (
               <p className="queue-cell">Manual review required</p>
@@ -165,12 +168,12 @@ export function ComplaintQueue() {
         <p className="eyebrow">OPERATIONS / THE COMPLAINT QUEUE</p>
         <h1>A clear view of the work.</h1>
         <p>
-          Filter the fictional caseload, find the next priority, and open the
+          Filter the caseload, find the next priority, and open the
           full record.
         </p>
       </div>
       <p className="officer-notice">
-        {profile.role === "admin" ? "System-wide oversight across prototype cells." : `Cases currently assigned to ${cellName}. Transfers move access to the new cell.`}
+        {profile.role === "admin" ? "System-wide oversight across cells." : `Cases currently assigned to ${cellName}. Transfers move access to the new cell.`}
       </p>
       <section className="officer-panel">
         <QueueFiltersPanel
@@ -179,7 +182,7 @@ export function ComplaintQueue() {
           cases={cases}
         />
         <p className="queue-result" role="status">
-          {items.length} of {cases.length} demo cases ·{" "}
+          {items.length} of {cases.length} cases ·{" "}
           {profile.role === "admin" ? "All configured cells" : cellName}
         </p>
         <QueueRows items={items} />

@@ -71,19 +71,19 @@ export function OfficerNav() {
           ))}
         </nav>
         <details className="officer-settings">
-          <summary>Settings · preview</summary>
+          <summary>Settings</summary>
           <p>
-            Account roles and cell assignments are managed by your administrator. Cell mappings are prototype configurations.
+            Account roles and cell assignments are managed by your administrator.
           </p>
         </details>
         <div className="officer-profile">
-          <span className="officer-avatar">{profile.display_name.slice(0, 2).toUpperCase()}</span>
-          <strong>{profile.display_name}</strong>
-          <p>{admin ? "Admin / Main Officer" : "Cell Officer"}</p><p>{admin ? "System-wide oversight" : cellName}</p>
-          <span className="demo-badge">{mode === "persistent" ? "AUTHENTICATED PROFILE" : "DEMO IDENTITY"}</span>
+          <span className="officer-avatar">{profile.display_name?.trim().split(/\s+/).map(part => part[0]).slice(0, 2).join("").toUpperCase() || "—"}</span>
+          <strong>{profile.display_name?.trim() || "Your account"}</strong>
+          <p>{admin ? "Administrator" : "Cell Officer"}</p><p>{admin ? "System-wide oversight" : cellName}</p>
+          <span className="demo-badge">{mode === "persistent" ? "AUTHENTICATED PROFILE" : "WORKSPACE PROFILE"}</span>
         </div>
         <SignOutLink className="officer-logout" demoHref="/login">
-          {profile ? "Log out ↗" : "Exit officer demo ↗"}
+          {profile ? "Sign out ↗" : "Sign out ↗"}
         </SignOutLink>
         <p className="officer-fine">
           {profile

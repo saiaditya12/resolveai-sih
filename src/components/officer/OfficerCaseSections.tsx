@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { cellDisplayName, institutionDisplayName, systemDisplayText, roleDisplayName, auditDisplayText, personDisplayName } from "@/lib/presentation";
 import { formatDemoDate } from "@/lib/demo-student";
 import { formatEventTime } from "@/lib/complaint-tracking";
 import { fileSize } from "@/lib/complaint-flow";
@@ -12,12 +14,46 @@ import { institutionPatternPolicy } from "@/lib/patterns/types";
 import { formatDuration } from "@/lib/sla/sla";
 import { prototypeSlaPolicy } from "@/lib/sla/policy";
 import { OfficerStatus, PriorityBadge, SlaBadge } from "./OfficerBadges";
+import { useComplaintStore } from "@/components/ComplaintStoreProvider";
+import type { InstitutionComplaintStats } from "@/lib/patterns/institution-stats";
+
+function isInstitutionStatsResponse(
+  value: unknown,
+): value is { stats: InstitutionComplaintStats } {
+  if (!value || typeof value !== "object" || !("stats" in value)) return false;
+  const stats = value.stats;
+  return (
+    !!stats &&
+    typeof stats === "object" &&
+    "total" in stats &&
+    typeof stats.total === "number" &&
+    "recentCount" in stats &&
+    typeof stats.recentCount === "number" &&
+    "open" in stats &&
+    typeof stats.open === "number" &&
+    "resolved" in stats &&
+    typeof stats.resolved === "number" &&
+    "escalated" in stats &&
+    typeof stats.escalated === "number" &&
+    "topCategory" in stats &&
+    typeof stats.topCategory === "string" &&
+    "asOf" in stats &&
+    typeof stats.asOf === "string" &&
+    "statusBreakdown" in stats &&
+    !!stats.statusBreakdown &&
+    typeof stats.statusBreakdown === "object" &&
+    "priorityBreakdown" in stats &&
+    !!stats.priorityBreakdown &&
+    typeof stats.priorityBreakdown === "object"
+  );
+}
+
 export function OfficerCaseHeader({ item }: { item: ComplaintQueueItem }) {
   return (
     <header className="officer-case-header">
-      <p className="eyebrow">{item.id} / FICTIONAL COMPLAINT</p>
+      <p className="eyebrow">{item.id} / COMPLAINT</p>
       <h1>{item.title}</h1>
-      <p className="officer-case-institution">{item.institution}</p>
+      <p className="officer-case-institution">{institutionDisplayName(item.institution)}</p>
       <div className="officer-badges">
         <OfficerStatus status={item.status} />
         <PriorityBadge priority={item.priority} />
@@ -36,13 +72,13 @@ export function OfficerCaseHeader({ item }: { item: ComplaintQueueItem }) {
             {item.routingStatus === "manual-review" &&
             !item.overriddenByOfficer
               ? "Review status"
-              : "Assigned demo cell"}
+              : "Assigned cell"}
           </dt>
           <dd>
             {item.routingStatus === "manual-review" &&
             !item.overriddenByOfficer
               ? "Manual review queue"
-              : officerCells.find((c) => c.id === item.cellId)?.name}
+              : cellDisplayName(officerCells.find((c) => c.id === item.cellId)?.name)}
           </dd>
         </div>
         <div>
@@ -64,7 +100,7 @@ export function CaseSummaryPanel({ item }: { item: ComplaintQueueItem }) {
       <section className="officer-panel officer-summary">
         <p className="eyebrow">01 / SYSTEM ANALYSIS</p>
         <h2>Complaint understanding.</h2>
-        <p className="officer-summary-text">{intelligence.summary}</p>
+        <p className="officer-summary-text">{systemDisplayText(intelligence.summary)}</p>
         <dl className="officer-facts">
           <div>
             <dt>Identified category</dt>
@@ -80,7 +116,7 @@ export function CaseSummaryPanel({ item }: { item: ComplaintQueueItem }) {
           </div>
           <div>
             <dt>System recommendation</dt>
-            <dd>{recommendedCell?.name || "Manual review required"}</dd>
+            <dd>{cellDisplayName(recommendedCell?.name || "Manual review required")}</dd>
           </div>
           <div>
             <dt>Current Responsibility</dt>
@@ -88,7 +124,7 @@ export function CaseSummaryPanel({ item }: { item: ComplaintQueueItem }) {
               {item.routingStatus === "manual-review" &&
               !item.overriddenByOfficer
                 ? "Manual review queue"
-                : currentCell?.name || "Manual review queue"}
+                : cellDisplayName(currentCell?.name || "Manual review queue")}
             </dd>
           </div>
           <div>
@@ -126,9 +162,9 @@ export function CaseSummaryPanel({ item }: { item: ComplaintQueueItem }) {
           </div>
         </dl>
         <p className="officer-fine">
-          {intelligence.routingReason}{" "}
+          {systemDisplayText(intelligence.routingReason)}{" "}
           {intelligence.manualReviewReason
-            ? `Manual review: ${intelligence.manualReviewReason}`
+            ? `Manual review: ${systemDisplayText(intelligence.manualReviewReason || "")}`
             : ""}
         </p>
         {item.overriddenByOfficer && (
@@ -144,9 +180,9 @@ export function CaseSummaryPanel({ item }: { item: ComplaintQueueItem }) {
     <section className="officer-panel officer-summary">
       <p className="eyebrow">01 / CASE SUMMARY</p>
       <h2>The issue, at a glance.</h2>
-      <p className="officer-summary-text">{item.summary.text}</p>
+      <p className="officer-summary-text">{systemDisplayText(item.summary.text)}</p>
       <p className="officer-fine">
-        {item.summary.source}. No LLM generated this summary. Verify against the
+        {systemDisplayText(item.summary.source)}. No LLM generated this summary. Verify against the
         original complaint and supporting records.
       </p>
     </section>
@@ -158,7 +194,7 @@ export function EvidencePanel({ item }: { item: ComplaintQueueItem }) {
       <p className="eyebrow">02 / EVIDENCE</p>
       <h2>The supporting record.</h2>
       <p className="officer-fine">
-        Fictional metadata only. No cloud files, remote access or downloads.
+        File metadata only. Downloads are not available here.
       </p>
       {item.evidence.length ? (
         <ul className="officer-evidence">
@@ -171,7 +207,7 @@ export function EvidencePanel({ item }: { item: ComplaintQueueItem }) {
                   {file.type} · {fileSize(file.size)}
                 </p>
                 <small>
-                  Listed by {file.by} · {formatDemoDate(file.at)}
+                  Listed by {personDisplayName(file.by)} · {formatDemoDate(file.at)}
                 </small>
               </div>
             </li>
@@ -179,7 +215,7 @@ export function EvidencePanel({ item }: { item: ComplaintQueueItem }) {
         </ul>
       ) : (
         <p>
-          No evidence listed in this sample. Request clarification before
+          No evidence listed in this case. Request clarification before
           relying on unsupported details.
         </p>
       )}
@@ -244,8 +280,8 @@ export function OriginalOfficerComplaint({
       <p className="officer-preserve">{item.description}</p>
       <dl className="officer-facts">
         <div>
-          <dt>Demo student</dt>
-          <dd>{item.student.name}</dd>
+          <dt>Student</dt>
+          <dd>{personDisplayName(item.student.name)}</dd>
         </div>
         <div>
           <dt>Incident date</dt>
@@ -265,19 +301,18 @@ export function OfficerCaseTimeline({ item }: { item: ComplaintQueueItem }) {
       <p className="eyebrow">03 / CASE HISTORY</p>
       <h2>A visible trail of decisions.</h2>
       <p className="officer-fine">
-        Prewritten events plus local demo actions. This is not a production
-        audit log.
+        Recorded actions and updates for this complaint.
       </p>
       <ol className="officer-events">
         {item.events.map((event) => (
           <li key={event.id}>
             <div>
               <time dateTime={event.at}>{formatEventTime(event.at)} IST</time>
-              <span>{event.audit?.actor_name || event.actor}{event.audit?.actor_role ? ` / ${event.audit.actor_role}` : ""}{event.audit?.actor_cell ? ` / ${officerCells.find(c => c.id === event.audit?.actor_cell)?.name || event.audit.actor_cell}` : ""}</span>
+              <span>{personDisplayName(event.audit?.actor_name || event.actor)}{event.audit?.actor_role ? ` / ${roleDisplayName(event.audit.actor_role)}` : ""}{event.audit?.actor_cell ? ` / ${cellDisplayName(officerCells.find(c => c.id === event.audit?.actor_cell)?.name || "Review cell")}` : ""}</span>
             </div>
             <div>
-              <h3>{event.title}</h3>
-              <p className="officer-preserve">{event.explanation}</p>
+              <h3>{auditDisplayText(event.title)}</h3>
+              <p className="officer-preserve">{auditDisplayText(event.explanation)}</p>
             </div>
           </li>
         ))}
@@ -292,41 +327,96 @@ export function InstitutionHistoryPanel({
   item: ComplaintQueueItem;
   cases: ComplaintQueueItem[];
 }) {
+  const { mode } = useComplaintStore();
+  const [statsResult, setStatsResult] = useState<{
+    institution: string;
+    stats: InstitutionComplaintStats | null;
+    error: string;
+  }>({ institution: "", stats: null, error: "" });
+  const persistedStats =
+    statsResult.institution === item.institution ? statsResult.stats : null;
+  const statsError =
+    statsResult.institution === item.institution ? statsResult.error : "";
+  useEffect(() => {
+    if (mode !== "persistent") return;
+
+    const controller = new AbortController();
+    const query = new URLSearchParams({ institution: item.institution });
+    void fetch(`/api/institutions/history?${query}`, {
+      cache: "no-store",
+      credentials: "same-origin",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const payload: unknown = await response.json();
+        if (!response.ok || !isInstitutionStatsResponse(payload))
+          throw new Error("Institution history is temporarily unavailable.");
+        setStatsResult({
+          institution: item.institution,
+          stats: payload.stats,
+          error: "",
+        });
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) {
+          setStatsResult({
+            institution: item.institution,
+            stats: null,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Institution history is temporarily unavailable.",
+          });
+        }
+      });
+    return () => controller.abort();
+  }, [item.institution, mode]);
+
+  const statsAsOf =
+    mode === "persistent"
+      ? persistedStats?.asOf ?? new Date().toISOString()
+      : OFFICER_DEMO_CLOCK;
   const history = getInstitutionComplaintHistory(
     cases,
     item.institution,
-    OFFICER_DEMO_CLOCK,
+    statsAsOf,
   );
+  const aggregate = mode === "persistent" ? persistedStats : history;
   const currentCluster = history.clusters.find((cluster) =>
     cluster.complaintIds.includes(item.id),
   );
   return (
     <section className="officer-panel">
-      <p className="eyebrow">INSTITUTION COMPLAINT HISTORY / DEMO</p>
-      <h2>{history.institution}</h2>
+      <p className="eyebrow">INSTITUTION COMPLAINT HISTORY</p>
+      <h2>{institutionDisplayName(history.institution)}</h2>
+      {mode === "persistent" && !persistedStats && (
+        <p role={statsError ? "alert" : "status"}>
+          {statsError || "Loading institution history…"}
+        </p>
+      )}
       <dl className="officer-history-counts">
         <div>
           <dt>Complaints · 90 days</dt>
-          <dd>{history.total}</dd>
+          <dd>{aggregate?.total ?? "—"}</dd>
         </div>
         <div>
           <dt>Last 30 days</dt>
-          <dd>{history.recentCount}</dd>
+          <dd>{aggregate?.recentCount ?? "—"}</dd>
         </div>
         <div>
           <dt>Open</dt>
-          <dd>{history.open}</dd>
+          <dd>{aggregate?.open ?? "—"}</dd>
         </div>
         <div>
           <dt>Resolved</dt>
-          <dd>{history.resolved}</dd>
+          <dd>{aggregate?.resolved ?? "—"}</dd>
         </div>
         <div>
           <dt>Escalated</dt>
-          <dd>{history.escalated}</dd>
+          <dd>{aggregate?.escalated ?? "—"}</dd>
         </div>
       </dl>
-      <p>Top category: {history.topCategory}</p>
+      <p>Top category: {aggregate?.topCategory ?? "—"}</p>
       {currentCluster ? (
         <div className="officer-institution-cluster">
           <h3>Repeated issue pattern detected</h3>
@@ -360,13 +450,13 @@ export function InstitutionHistoryPanel({
           )}
         </div>
       ) : (
-        <p>No related issue group is currently identified in this sample.</p>
+        <p>No related issue group is currently identified in this case.</p>
       )}
       <div className="officer-history-breakdowns">
         <div>
           <h3>Workflow status</h3>
           <ul>
-            {Object.entries(history.statusBreakdown).map(([status, count]) => (
+            {Object.entries(aggregate?.statusBreakdown ?? {}).map(([status, count]) => (
               <li key={status}>
                 <span>{status}</span>
                 <strong>{count}</strong>
@@ -377,7 +467,7 @@ export function InstitutionHistoryPanel({
         <div>
           <h3>Priority context</h3>
           <ul>
-            {Object.entries(history.priorityBreakdown).map(
+            {Object.entries(aggregate?.priorityBreakdown ?? {}).map(
               ([priority, count]) => (
                 <li key={priority}>
                   <span>{priority}</span>
@@ -389,7 +479,7 @@ export function InstitutionHistoryPanel({
         </div>
       </div>
       <p className="officer-fine">
-        These counts and issue signals derive from fictional demo records. They
+        These counts and issue signals derive from records. They
         are decision-support context, not findings about the institution.
       </p>
     </section>
@@ -403,22 +493,22 @@ export function OwnerSlaPanel({ item }: { item: ComplaintQueueItem }) {
       <h2>
         {item.routingStatus === "manual-review" && !item.overriddenByOfficer
           ? "Manual review queue"
-          : officerCells.find((c) => c.id === item.cellId)?.name}
+          : cellDisplayName(officerCells.find((c) => c.id === item.cellId)?.name)}
       </h2>
       <p className="officer-fine">
         {item.routingStatus === "manual-review" && !item.overriddenByOfficer
           ? "This case is in an unassigned manual review queue; no officer is assigned."
-          : "Prototype routing configuration. Fictional owner; no official AICTE mapping."}
+          : "Current responsibility follows the configured routing."}
       </p>
       <div className="officer-owner-state">
         <OfficerStatus status={item.status} />
         <PriorityBadge priority={item.priority} />
       </div>
       <hr />
-      <p className="eyebrow">RESPONSE WINDOW / DEMO RULE</p>
+      <p className="eyebrow">RESPONSE WINDOW</p>
       <SlaBadge item={item} />
       <h3>SLA status: {sla.state === "On Track" ? "Normal" : sla.state}</h3>
-      <p>Priority target: {sla.targetHours} hours under prototype policy.</p>
+      <p>Priority target: {sla.targetHours} hours under the configured service-level target.</p>
       {sla.deadlineAt ? (
         <p>
           Deadline:{" "}
@@ -448,7 +538,7 @@ export function OwnerSlaPanel({ item }: { item: ComplaintQueueItem }) {
         <div className="officer-escalation-recommendation">
           <strong>Escalation recommended</strong>
           <p>
-            This case is overdue beyond the prototype grace period. An officer
+            This case is overdue beyond the configured grace period. An officer
             may use the existing Escalate action; no automatic state or owner
             change is made.
           </p>
@@ -456,11 +546,11 @@ export function OwnerSlaPanel({ item }: { item: ComplaintQueueItem }) {
       )}
       {item.escalationReason && (
         <p className="officer-preserve">
-          Escalation reason: {item.escalationReason}
+        Escalation reason: {systemDisplayText(item.escalationReason)}
         </p>
       )}
       <p className="officer-fine">
-        {prototypeSlaPolicy.label}. Student information requests pause the
+        {systemDisplayText(prototypeSlaPolicy.label)}. Student information requests pause the
         officer response clock. The fixed monitoring clock is{" "}
         {formatEventTime(OFFICER_DEMO_CLOCK)} IST; this is not an official
         AICTE SLA.
@@ -471,17 +561,17 @@ export function OwnerSlaPanel({ item }: { item: ComplaintQueueItem }) {
 export function SuggestedNextAction({ item }: { item: ComplaintQueueItem }) {
   return (
     <section className="officer-panel">
-      <p className="eyebrow">SUGGESTED NEXT ACTION / MOCK</p>
+      <p className="eyebrow">SUGGESTED NEXT ACTION</p>
       <h2>{item.resolution ? "Outcome recorded." : "A possible next step."}</h2>
       <p>
         {item.resolution
-          ? "This demo case is resolved. Review the recorded outcome and history."
-          : item.summary.suggestion}
+          ? "This case is resolved. Review the recorded outcome and history."
+          : systemDisplayText(item.summary.suggestion)}
       </p>
       <p className="officer-fine">
         {item.resolution
           ? "No further case actions are enabled."
-          : item.summary.reason}{" "}
+          : systemDisplayText(item.summary.reason)}{" "}
         Prewritten guidance, not AI advice.
       </p>
     </section>

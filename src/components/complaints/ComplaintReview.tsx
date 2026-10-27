@@ -1,3 +1,4 @@
+import { institutionDisplayName } from "@/lib/presentation";
 import { type ComplaintDraft, fileSize } from "@/lib/complaint-flow";
 export function ComplaintReview({
   draft,
@@ -19,7 +20,7 @@ export function ComplaintReview({
             Edit ↗
           </button>
         </header>
-        <strong>{draft.institution?.name}</strong>
+        <strong>{institutionDisplayName(draft.institution?.name || "Not selected")}</strong>
         <p>
           {draft.institution?.city}, {draft.institution?.state} ·{" "}
           {draft.institution?.type}
@@ -90,7 +91,7 @@ export function ComplaintReview({
             ))}
           </ul>
         ) : (
-          <p>No evidence selected. You can submit the demo without it.</p>
+          <p>No evidence selected. You can submit without it.</p>
         )}
       </section>
     </div>

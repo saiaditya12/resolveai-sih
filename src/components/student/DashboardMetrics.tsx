@@ -1,7 +1,7 @@
 import type { Complaint } from "@/lib/demo-student";
 export function DashboardMetrics({ items }: { items: Complaint[] }) {
   const metrics = [
-    ["Total complaints", items.length, "All your demo cases"],
+    ["Total complaints", items.length, "All your cases"],
     [
       "In progress",
       items.filter((c) =>

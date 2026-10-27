@@ -1,5 +1,11 @@
 "use client";
 import Link from "next/link";
+import {
+  cellDisplayName,
+  institutionDisplayName,
+  normalizeInstitutionName,
+  systemDisplayText,
+} from "@/lib/presentation";
 import { useMemo } from "react";
 import { firstRepeatedIssuePattern } from "@/lib/similarity/similarity";
 import { formatDemoDate } from "@/lib/demo-student";
@@ -16,8 +22,14 @@ import {
 import { getInstitutionSignals } from "@/lib/patterns/institution-patterns";
 import { institutionPatternPolicy } from "@/lib/patterns/types";
 import { QueueRows } from "./ComplaintQueue";
+import { useComplaintStore } from "@/components/ComplaintStoreProvider";
 export function OfficerDashboard() {
   const { cases, basePath, cellName } = useOfficerDemo();
+  const { mode } = useComplaintStore();
+  const asOf = useMemo(
+    () => (mode === "persistent" ? new Date().toISOString() : OFFICER_DEMO_CLOCK),
+    [mode],
+  );
   const admin = basePath === "/admin";
   const mine = cases;
   const metrics = officerMetrics(mine);
@@ -30,13 +42,18 @@ export function OfficerDashboard() {
     )
     .slice(0, 3);
   const escalated = cases.filter((c) => c.status === "Escalated");
-  const institutions = [...new Set(cases.map((c) => c.institution))].map(
-    (name) => institutionHistory(cases, name),
-  );
+  const institutions = [
+    ...new Map(
+      cases.map((caseItem) => [
+        normalizeInstitutionName(caseItem.institution),
+        caseItem.institution,
+      ]),
+    ).values(),
+  ].map((name) => institutionHistory(cases, name, asOf));
   const pattern = useMemo(() => firstRepeatedIssuePattern(cases), [cases]);
   const institutionSignals = useMemo(
-    () => getInstitutionSignals(cases, OFFICER_DEMO_CLOCK),
-    [cases],
+    () => getInstitutionSignals(cases, asOf),
+    [cases, asOf],
   );
   return (
     <>
@@ -52,23 +69,23 @@ export function OfficerDashboard() {
           Open complaint queue ↗
         </Link>
       </div>
-      {admin && <section className="officer-panel"><h2>Cell workloads</h2><dl className="officer-metrics">{officerCells.map(cell => <div key={cell.id}><dt>{cell.name}</dt><dd>{cases.filter(c => c.cellId === cell.id && isOpenCase(c)).length}</dd><p>Active cases</p></div>)}</dl></section>}
+      {admin && <section className="officer-panel"><h2>Cell workloads</h2><dl className="officer-metrics">{officerCells.map(cell => <div key={cell.id}><dt>{cellDisplayName(cell.name)}</dt><dd>{cases.filter(c => c.cellId === cell.id && isOpenCase(c)).length}</dd><p>Active cases</p></div>)}</dl></section>}
       <dl className="officer-metrics">
         {[
           ["New", metrics.new, "Submitted through assignment"],
           [admin ? "Total active complaints" : "Assigned cases", admin ? metrics.active : mine.length, "Within this workspace"],
           ["Under Review", mine.filter(c => c.status === "Officer Review").length, "Officer review in progress"],
           ["Waiting for Student", mine.filter(c => c.status === "Student Action Required").length, "Information requested"],
-          ["Due Soon", mine.filter(c => officerSla(c).state === "Due Soon").length, "Prototype response target"],
+          ["Due Soon", mine.filter(c => officerSla(c).state === "Due Soon").length, "Response target"],
           ["Escalated", escalated.length, "Higher-level attention"],
           ["Routed", mine.filter(c => c.routingStatus === "routed").length, "Current routing recorded"],
           ["Resolved", mine.filter(c => c.status === "Resolved").length, "Recorded outcomes"],
           ["Needs Action", metrics.needsAction, "Ready for officer attention"],
-          ["Overdue", metrics.overdue, "Past the demo response target"],
+          ["Overdue", metrics.overdue, "Past the response target"],
           [
             "Resolved This Week",
             metrics.resolvedWeek,
-            "18–24 Oct 2026 demo window",
+            "18–24 Oct 2026 window",
           ],
         ].map(([label, value, note]) => (
           <div key={label}>
@@ -84,9 +101,9 @@ export function OfficerDashboard() {
       </p>
       {pattern && <section className="officer-pattern">
         <div>
-          <p className="eyebrow">REPEATED ISSUE PATTERN / LOCAL DEMO RECORDS</p>
+          <p className="eyebrow">REPEATED ISSUE PATTERN / COMPLAINT RECORDS</p>
           <h2>A recurring concern deserves context.</h2>
-          <p>{pattern.count} related complaints at {pattern.institution}. {pattern.category} · {pattern.windowDays} days ending {formatDemoDate(pattern.asOf)}. A signal for review, not a finding about the institution.</p>
+          <p>{pattern.count} related complaints at {institutionDisplayName(pattern.institution)}. {pattern.category} · {pattern.windowDays} days ending {formatDemoDate(pattern.asOf)}. A signal for review, not a finding about the institution.</p>
         </div>
         <Link href={`${basePath}/complaints/${pattern.complaintId}`} className="text-link">Review related complaints ↗</Link>
       </section>}
@@ -95,7 +112,7 @@ export function OfficerDashboard() {
           className="officer-panel officer-institution-signals"
           aria-labelledby="institution-signals-title"
         >
-          <p className="eyebrow">INSTITUTION SIGNALS / LOCAL DEMO RECORDS</p>
+          <p className="eyebrow">INSTITUTION SIGNALS / COMPLAINT RECORDS</p>
           <h2 id="institution-signals-title">Patterns to review in context.</h2>
           <div className="officer-signal-grid">
             {institutionSignals.map(({ institution, cluster, openCount }) => (
@@ -116,7 +133,7 @@ export function OfficerDashboard() {
                   className="text-link"
                   href={`${basePath}/complaints/${cluster.complaintIds[0]}`}
                 >
-                  Review sample cases ↗
+                  Review cases ↗
                 </Link>
               </article>
             ))}
@@ -139,7 +156,7 @@ export function OfficerDashboard() {
           </Link>
         </div>
         <QueueRows items={urgent} />
-        {!urgent.length && <p>No active cases remain in your demo cell.</p>}
+        {!urgent.length && <p>No active cases remain in your cell.</p>}
       </section>
       <div className="officer-dashboard-lower">
         <section className="officer-panel" id="escalations">
@@ -153,26 +170,25 @@ export function OfficerDashboard() {
                     <span>{c.id}</span>
                     <strong>{c.title} ↗</strong>
                     <p>
-                      {c.escalationReason || "Escalated in this demo scenario."}
+                      {c.escalationReason || "Escalation recorded."}
                     </p>
                   </Link>
                 </li>
               ))}
             </ul>
           ) : (
-            <p>No escalated demo cases.</p>
+            <p>No escalated cases.</p>
           )}
         </section>
         <section className="officer-panel" id="analytics">
-          <p className="eyebrow">03 / ANALYTICS · SAMPLE COUNTS</p>
+          <p className="eyebrow">03 / ANALYTICS · COUNTS</p>
           <h2>Where the work sits.</h2>
           <dl className="officer-distribution">
             {[...new Set(cases.map((c) => c.category))].map((category) => (
               <div key={category}>
                 <dt>{category}</dt>
                 <dd>
-                  {cases.filter((c) => c.category === category).length} demo
-                  cases
+                  {cases.filter((c) => c.category === category).length} cases
                 </dd>
               </div>
             ))}
@@ -184,23 +200,24 @@ export function OfficerDashboard() {
         </section>
       </div>
       <section className="officer-panel" id="institutions">
-        <p className="eyebrow">04 / INSTITUTION CONTEXT · FICTIONAL</p>
+        <p className="eyebrow">04 / INSTITUTION CONTEXT</p>
         <h2>Patterns with their limits in view.</h2>
         <div className="officer-institution-grid">
           {institutions.map((i) => (
             <article key={i.institution}>
-              <h3>{i.institution}</h3>
+              <h3>{institutionDisplayName(i.institution)}</h3>
               <p>
-                {i.total} cases · {i.open} open · {i.resolved} resolved
+                {i.total} cases · {i.recentCount} in 30 days · {i.open} open ·{" "}
+                {i.resolved} resolved · {i.escalated} escalated
               </p>
               <p>Top category: {i.topCategory}</p>
-              <small>{i.pattern}</small>
+              <small>{systemDisplayText(i.pattern)}</small>
             </article>
           ))}
         </div>
         <p className="officer-fine">
-          Last 90 days relative to the fixed demo clock. These are not real
-          institution statistics.
+          Counts reflect cases available to this workspace over the reporting
+          windows. They are descriptive, not findings about an institution.
         </p>
       </section>
     </>

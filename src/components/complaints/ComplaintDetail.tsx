@@ -70,12 +70,12 @@ export function ComplaintDetail({ id }: { id: string }) {
         <p className="eyebrow">
           {mode === "persistent"
             ? "CASE NOT FOUND"
-            : "CASE NOT AVAILABLE IN THIS DEMO SESSION"}
+            : "CASE NOT AVAILABLE IN THIS SESSION"}
         </p>
         <h1>
           {mode === "persistent"
             ? "This complaint isn’t available in your account."
-            : "This local case isn’t here."}
+            : "This complaint could not be found."}
         </h1>
         <p>
           {mode === "persistent"
@@ -106,7 +106,7 @@ export function ComplaintDetail({ id }: { id: string }) {
           ? "This complaint and its history are stored in your account. Complaint text is analyzed server-side; evidence file contents are not uploaded."
           : local
           ? "The complaint record and officer actions remain in browser memory. Complaint text is sent to server-side analysis; evidence files are not uploaded."
-          : "All case history, authorities, officers and outcomes below are fictional demo data."}{" "}
+          : "Review the complaint history, current responsibility and recorded outcome."}{" "}
         Nothing is sent to AICTE.{" "}
         {mode === "persistent"
           ? "Your complaint remains available after sign out or refresh."
@@ -138,8 +138,8 @@ export function ComplaintDetail({ id }: { id: string }) {
           <SlaStatus data={data} />
           <p className="tracking-caption">
             {mode === "persistent"
-              ? "A visible record, not a live service. Data is stored in the configured project."
-              : "A visible record, not a live service. Analysis and officer actions are local demo activity only."}
+              ? "Follow your complaint from submission to a recorded outcome."
+              : "Follow your complaint from submission to a recorded outcome."}
           </p>
         </aside>
       </div>

@@ -27,7 +27,7 @@ export function PreviewButton({
         <p className="eyebrow">PHASE 1 / PRODUCT CONCEPT</p>
         <h2>A clearer path is taking shape.</h2>
         <p>
-          Complaint submission isn’t available in this prototype. No personal
+          Use your student workspace to submit a complaint. No personal
           information is collected or sent.
         </p>
         <p>

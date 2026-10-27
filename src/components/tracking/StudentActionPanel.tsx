@@ -83,7 +83,7 @@ export function StudentActionPanel({
       }}
     >
       <div className="action-dialog-head">
-        <p className="eyebrow">{persistent ? "STUDENT RESPONSE" : "LOCAL DEMO RESPONSE"}</p>
+        <p className="eyebrow">{persistent ? "STUDENT RESPONSE" : "RESPONSE"}</p>
         <button
           type="button"
           onClick={onClose}
@@ -113,8 +113,7 @@ export function StudentActionPanel({
             aria-describedby="response-rule response-validation"
           />
           <p id="response-rule" className="flow-hint">
-            Add at least 10 characters or select a supporting file. Use
-            fictional information only.
+            Add at least 10 characters or select a supporting file. Describe the requested information clearly.
           </p>
           <p id="response-validation" role="alert" className="flow-error">
             {error}
@@ -124,14 +123,14 @@ export function StudentActionPanel({
         <p className="flow-callout">
           {persistent
             ? "Your response is saved to this complaint. File contents are not uploaded; only supported evidence metadata is retained."
-            : "This saves a demo response in memory. No files are uploaded and no officer is notified. File contents are released when you close this panel; only metadata is retained after saving."}
+            : "This saves a response in memory. No files are uploaded and no officer is notified. File contents are released when you close this panel; only metadata is retained after saving."}
         </p>
         <div className="flow-actions">
           <button type="button" className="button secondary" onClick={onClose}>
             Cancel
           </button>
           <button type="submit" className="button primary" disabled={savingState}>
-            {savingState ? "Saving…" : persistent ? "Save response ↗" : "Save demo response ↗"}
+            {savingState ? "Saving…" : persistent ? "Save response ↗" : "Save response ↗"}
           </button>
         </div>
       </form>

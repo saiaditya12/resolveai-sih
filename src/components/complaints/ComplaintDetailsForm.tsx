@@ -99,7 +99,7 @@ export function ComplaintDetailsForm({
       </div>
       <p className="flow-callout" id="category-hint">
         Not sure about the category? That’s okay. The system will classify the
-        grievance before prototype routing. Your selection is only a hint;
+        grievance before routing. Your selection is only a hint;
         deterministic fallback rules are used if configured analysis is
         unavailable.
       </p>

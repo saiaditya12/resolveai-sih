@@ -1,8 +1,8 @@
 import { site } from "@/lib/site";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 const updates = [
-  ["Complaint received", "Your reference ID is DEMO-024."],
-  ["Routed & assigned", "Assigned to the example grievance cell."],
+  ["Complaint received", "Your reference ID is GRV-024."],
+  ["Routed & assigned", "Assigned to the responsible review cell."],
   ["Information requested", "Officer requested the original fee receipt."],
   ["Evidence received", "Your receipt was added to the case."],
   ["Under review", "Latest action: institution response requested."],
@@ -19,7 +19,7 @@ export function StudentPreview() {
           <em>Stay in the loop.</em>
         </h2>
         <p>
-          No chasing inboxes. No decoding department names. A proposed tracking
+          No chasing inboxes. No decoding department names. A tracking
           experience that makes the next step clear.
         </p>
         <ul className="plain-list">
@@ -29,17 +29,17 @@ export function StudentPreview() {
           <li>Escalations and outcomes on record</li>
         </ul>
         <p className="small-note">
-          Tracking preview only. No live case lookup is connected.
+          Sign in to view your complaint history and latest updates.
         </p>
       </div>
       <div className="tracking-preview">
         <div className="preview-bar">
           <span>YOUR CASE JOURNEY</span>
-          <span className="demo-badge">DEMO</span>
+          <span className="demo-badge">CASE OVERVIEW</span>
         </div>
         <div className="tracking-title">
           <div>
-            <p className="eyebrow">DEMO-024 / FEE REFUND</p>
+            <p className="eyebrow">GRV-024 / FEE REFUND</p>
             <h3>Every step, in view.</h3>
           </div>
           <span className="status-pill">Under review</span>
@@ -65,7 +65,7 @@ export function StudentPreview() {
         </ol>
         <div className="tracking-footer">
           <span>Escalation status</span>
-          <strong>Not escalated · demo</strong>
+          <strong>Not escalated</strong>
         </div>
       </div>
     </section>
@@ -84,7 +84,7 @@ export function OfficerPreview() {
           </h2>
         </div>
         <p>
-          A conceptual workspace that brings the case, evidence and
+          A workspace that brings the case, evidence and
           institutional context together.
         </p>
       </div>
@@ -92,9 +92,9 @@ export function OfficerPreview() {
         <div className="workspace-top">
           <span>
             {site.name} workspace{" "}
-            <span className="muted">/ Cases / DEMO-024</span>
+            <span className="muted">/ Cases / GRV-024</span>
           </span>
-          <span className="demo-badge">VISUAL PREVIEW · FICTIONAL CASE</span>
+          <span className="demo-badge">CASE WORKSPACE</span>
         </div>
         <div className="workspace-columns">
           <aside className="workspace-sidebar">
@@ -114,13 +114,13 @@ export function OfficerPreview() {
           <div className="workspace-main">
             <div className="case-heading">
               <div>
-                <p className="eyebrow">DEMO-024</p>
+                <p className="eyebrow">GRV-024</p>
                 <h3>Admission fee refund pending</h3>
               </div>
               <span className="priority-pill">Priority: standard</span>
             </div>
             <SpotlightCard>
-              <p className="eyebrow">✧ PROPOSED AI SUMMARY</p>
+              <p className="eyebrow">✧ CASE SUMMARY</p>
               <p>
                 The complainant reports an admission fee refund pending after
                 withdrawal. A fee receipt and withdrawal acknowledgement are
@@ -133,7 +133,7 @@ export function OfficerPreview() {
             <dl className="case-fields">
               <div>
                 <dt>Institution</dt>
-                <dd>Example Institute of Technology</dd>
+                <dd>Institution under review</dd>
               </div>
               <div>
                 <dt>Category</dt>
@@ -141,12 +141,12 @@ export function OfficerPreview() {
               </div>
               <div>
                 <dt>Assigned cell</dt>
-                <dd>Example grievance cell</dd>
+                <dd>Responsible review cell</dd>
               </div>
               <div>
                 <dt>SLA status</dt>
                 <dd>
-                  <span className="success-text">Within demo timeline</span>
+                  <span className="success-text">Within timeline</span>
                 </dd>
               </div>
             </dl>
@@ -180,7 +180,7 @@ export function OfficerPreview() {
             <div>
               <strong>23</strong>
               <p>similar grievances</p>
-              <span className="small-note">Fictional demo cluster</span>
+              <span className="small-note">Related issues</span>
             </div>
             <hr />
             <h4>Institution history</h4>

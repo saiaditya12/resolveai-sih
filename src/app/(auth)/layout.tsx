@@ -43,9 +43,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             </li>
           </ol>
           <div className="auth-disclaimer">
-            PHASE 2 / INTERFACE PREVIEW
+            YOUR ACCOUNT / RESOLVEAI
             <br />
-            <span>Independent SIH concept. Not an official AICTE service.</span>
+            <span>ResolveAI · A clearer path to resolution.</span>
           </div>
         </aside>
         <section className="auth-form-panel">{children}</section>

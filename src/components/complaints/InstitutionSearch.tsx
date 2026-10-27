@@ -1,4 +1,5 @@
 "use client";
+import { institutionDisplayName } from "@/lib/presentation";
 import { useState } from "react";
 import { institutions, type Institution } from "@/lib/complaint-flow";
 export function InstitutionSearch({
@@ -12,7 +13,7 @@ export function InstitutionSearch({
 }) {
   const [query, setQuery] = useState("");
   const results = institutions.filter((i) =>
-    `${i.name} ${i.city} ${i.state}`
+    `${institutionDisplayName(i.name)} ${i.city} ${i.state}`
       .toLowerCase()
       .includes(query.toLowerCase().trim()),
   );
@@ -29,12 +30,12 @@ export function InstitutionSearch({
           aria-describedby="institution-hint"
         />
         <p id="institution-hint" className="flow-hint">
-          All institutions below are fictional demo entries.
+          Search the institution directory.
         </p>
       </div>
       {selected && (
         <p className="selected-institution">
-          ✓ Selected: <strong>{selected.name}</strong>
+          ✓ Selected: <strong>{institutionDisplayName(selected.name)}</strong>
         </p>
       )}
       <fieldset
@@ -43,7 +44,7 @@ export function InstitutionSearch({
       >
         <legend>Choose one institution</legend>
         <p className="flow-hint" role="status">
-          {results.length} matching demo{" "}
+          {results.length} matching{" "}
           {results.length === 1 ? "institution" : "institutions"}
         </p>
         {error && (
@@ -65,7 +66,7 @@ export function InstitutionSearch({
                 onChange={() => onSelect(i)}
               />
               <span>
-                <strong>{i.name}</strong>
+                <strong>{institutionDisplayName(i.name)}</strong>
                 <span>
                   {i.city}, {i.state}
                 </span>
@@ -78,15 +79,14 @@ export function InstitutionSearch({
           <div className="flow-empty">
             <h3>No institution found.</h3>
             <p>
-              Try a shorter name, a city or a state. This directory contains
-              demo entries only.
+              Try a shorter name, a city or a state. Choose an institution from the available directory.
             </p>
             <button
               type="button"
               className="button secondary"
               onClick={() => setQuery("")}
             >
-              Show all demo institutions
+              Show all institutions
             </button>
           </div>
         )}

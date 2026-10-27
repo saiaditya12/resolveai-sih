@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { site } from "@/lib/site";
-import { demoStudent } from "@/lib/demo-student";
+
 import { SignOutLink } from "@/components/auth/SignOutLink";
 import { useComplaintStore } from "@/components/ComplaintStoreProvider";
 export function StudentNav() {
@@ -82,21 +82,21 @@ export function StudentNav() {
           </button>
         </nav>
         <div className="student-nav-note">
-          <span className="demo-badge">PHASE 4 / DEMO</span>
-          <p>A preview of a clearer path to resolution.</p>
+          <span className="demo-badge">COMPLAINT WORKSPACE</span>
+          <p>A clearer path to resolution.</p>
         </div>
         <div className="student-profile">
-          <span className="student-avatar">{demoStudent.initials}</span>
+          <span className="student-avatar">{profile?.display_name?.trim().split(/\s+/).map(part => part[0]).slice(0, 2).join("").toUpperCase() || "—"}</span>
           <div>
-            <strong>{profile?.display_name || demoStudent.name}</strong>
-            <span>{profile ? "Student account" : "Demo student"}</span>
+            <strong>{profile?.display_name?.trim() || "Your account"}</strong>
+            <span>Student</span>
           </div>
         </div>
         <SignOutLink
           className="student-logout"
           demoHref="/login"
         >
-          {profile ? "Log out ↗" : "Log out of demo ↗"}
+          Sign out ↗
         </SignOutLink>
         <p className="student-session-note">
           {profile ? "Signed in with your student account." : "No authenticated session is active."}
@@ -107,10 +107,10 @@ export function StudentNav() {
         className="preview-dialog"
         aria-label="Help and support"
       >
-        <p className="eyebrow">HELP / DEMO PREVIEW</p>
+        <p className="eyebrow">HELP & SUPPORT</p>
         <h2>Support is coming.</h2>
         <p>
-          This is an independent prototype. Live assistance and complaint
+          This is an independent platform. Live assistance and complaint
           support are not connected.
         </p>
         <button

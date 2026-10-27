@@ -29,8 +29,7 @@ export function Hero() {
             </a>
           </div>
           <p className="prototype-note">
-            <span className="status-dot" /> A Smart India Hackathon concept ·
-            Phase 1 preview
+            <span className="status-dot" /> Grievance routing, tracking and monitoring
           </p>
         </div>
         <RoutingVisual />

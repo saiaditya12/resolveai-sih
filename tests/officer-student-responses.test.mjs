@@ -1,3 +1,4 @@
+import * as presentation from "../src/lib/presentation.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -73,6 +74,10 @@ const sectionsOutput = ts.transpileModule(sectionsSource, {
 function loadResponsesPanel() {
   const exports = {};
   const modules = {
+    react: {
+      useEffect: () => {},
+      useState: (value) => [value, () => {}],
+    },
     "@/lib/demo-student": { formatDemoDate: (value) => value },
     "@/lib/complaint-tracking": {
       formatEventTime: (value) => value,
@@ -95,6 +100,10 @@ function loadResponsesPanel() {
       SlaBadge: () => null,
     },
     "react/jsx-runtime": jsx,
+    "@/lib/presentation": presentation,
+    "@/components/ComplaintStoreProvider": {
+      useComplaintStore: () => ({}),
+    },
   };
   vm.runInNewContext(sectionsOutput, {
     exports,
@@ -207,6 +216,7 @@ test("officer direct URL denies a complaint outside the current cell", async () 
     },
     "@/lib/officer-demo": { officerSeedCases: [] },
     "react/jsx-runtime": jsx,
+    "@/lib/presentation": presentation,
   };
   const exports = {};
   vm.runInNewContext(outputText, {
@@ -274,6 +284,7 @@ test("admin direct URL is authorized to render the complaint detail", async () =
     "@/components/officer/OfficerCase": { OfficerCase: "OfficerCase" },
     "@/lib/officer-demo": { officerSeedCases: [] },
     "react/jsx-runtime": jsx,
+    "@/lib/presentation": presentation,
   };
   const exports = {};
   vm.runInNewContext(outputText, {

@@ -1,5 +1,6 @@
 import type { ComplaintQueueItem } from "../officer-model.ts";
 import { isOpenCase } from "../officer-model.ts";
+import { normalizeInstitutionName } from "../presentation.ts";
 import {
   getInstitutionComplaintHistory,
 } from "../patterns/institution-patterns.ts";
@@ -152,19 +153,21 @@ export function calculateCommandCenterMetrics(
   const categoriesByCount = [...categories.entries()]
     .map(([category, count]) => ({ category, count }))
     .sort((a, b) => b.count - a.count || a.category.localeCompare(b.category));
-  const institutionNames = [...new Set(cases.map((item) => item.institution))];
+  const institutionNames = [
+    ...new Map(
+      cases.map((item) => [
+        normalizeInstitutionName(item.institution),
+        item.institution,
+      ]),
+    ).values(),
+  ];
   const institutions = institutionNames
     .map((institution) => {
       const institutionCases = cases.filter(
-        (item) => item.institution === institution,
+        (item) =>
+          normalizeInstitutionName(item.institution) ===
+          normalizeInstitutionName(institution),
       );
-      const counts = new Map<string, number>();
-      for (const item of institutionCases)
-        counts.set(item.category, (counts.get(item.category) ?? 0) + 1);
-      const topCategory =
-        [...counts.entries()].sort(
-          (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-        )[0]?.[0] ?? "None";
       const history = getInstitutionComplaintHistory(
         institutionCases as InstitutionPatternComplaint[],
         institution,
@@ -179,7 +182,7 @@ export function calculateCommandCenterMetrics(
         repeatedIssue:
           history.clusters.find((cluster) => cluster.complaintCount >= 2)
             ?.label ?? null,
-        topCategory,
+        topCategory: history.topCategory,
       };
     })
     .sort(
@@ -191,7 +194,9 @@ export function calculateCommandCenterMetrics(
   const patterns = institutionNames.flatMap((institution) => {
     const history = getInstitutionComplaintHistory(
       cases.filter(
-        (item) => item.institution === institution,
+        (item) =>
+          normalizeInstitutionName(item.institution) ===
+          normalizeInstitutionName(institution),
       ) as InstitutionPatternComplaint[],
       institution,
       asOf,
@@ -284,7 +289,8 @@ export function filterCommandCenterCases(
       isInMonitoringWindow(item.submittedAt, asOf, filters.windowDays) &&
       (filters.category === "all" || item.category === filters.category) &&
       (filters.institution === "all" ||
-        item.institution === filters.institution) &&
+        normalizeInstitutionName(item.institution) ===
+          normalizeInstitutionName(filters.institution)) &&
       (filters.sla === "all" || sla.state === filters.sla)
     );
   });

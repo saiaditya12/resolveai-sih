@@ -136,6 +136,11 @@ test("API role guard preserves unauthenticated and server failure statuses", asy
         createSupabaseAdminClient: () => ({}),
         hasSupabaseAdminConfiguration: () => true,
       },
+      "@/lib/patterns/institution-stats": {
+        getInstitutionComplaintStats: () => {
+          throw new Error("Not used by this test.");
+        },
+      },
       "./mapper": { mapPersistentComplaint: (row) => row },
     });
     const result = await api.requireApiRole(["student", "officer"]);
@@ -186,6 +191,11 @@ test("authenticated finance officer complaint loading is cell-scoped", async () 
     "@/lib/supabase/server": {
       createSupabaseAdminClient: () => client,
       hasSupabaseAdminConfiguration: () => true,
+    },
+    "@/lib/patterns/institution-stats": {
+      getInstitutionComplaintStats: () => {
+        throw new Error("Not used by this test.");
+      },
     },
     "./mapper": { mapPersistentComplaint: (row) => row },
   });

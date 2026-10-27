@@ -20,15 +20,15 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             <span>ResolveAI Command Center</span>
             <span className="demo-badge">
               {persistent
-                ? "PERSISTENT CASEWORK · NO EXTERNAL ACTIONS"
-                : "LOCAL DEMO · NO EXTERNAL ACTIONS"}
+                ? "CASE WORKSPACE"
+                : "CASE WORKSPACE"}
             </span>
           </header>
           <main id="officer-main">{children}</main>
           <footer className="officer-footer">
-            Independent SIH prototype. Not an official AICTE service.{" "}
+            An intelligent grievance routing, tracking and monitoring platform.{" "}
             {persistent
-              ? "Officer actions and case history are stored in the configured database."
+              ? "Actions and case history are saved to the complaint record."
               : "Officer changes stay in memory and reset on refresh."}
           </footer>
         </div>

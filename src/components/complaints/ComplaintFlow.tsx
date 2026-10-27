@@ -144,7 +144,7 @@ export function ComplaintFlow() {
       if (!draft.institution) next.institution = "Choose an institution.";
       if (!declared)
         next.declaration =
-          "Confirm the declaration before submitting this demo.";
+          "Confirm the declaration before submitting this complaint.";
       if (Object.keys(next).length) {
         setErrors(next);
         return;
@@ -222,14 +222,14 @@ export function ComplaintFlow() {
           <p>A few clear steps. One place to be heard.</p>
         </div>
         <span className="demo-badge">
-          {mode === "persistent" ? "ACCOUNT SUBMISSION" : "PHASE 3 · LOCAL DEMO"}
+          {mode === "persistent" ? "ACCOUNT SUBMISSION" : "COMPLAINT WORKSPACE"}
         </span>
       </div>
       <ComplaintStepper step={step} />
       <div className="flow-layout">
         <div className="flow-paper">
           <h2 ref={title} tabIndex={-1} className="flow-step-title">
-            {step === 4 ? "Your demo receipt" : headings[step]}
+            {step === 4 ? "Your receipt" : headings[step]}
           </h2>
           {step === 4 && result ? (
             <SubmissionSuccess
@@ -305,7 +305,7 @@ export function ComplaintFlow() {
                     {errors.declaration}
                   </p>
                   <p className="flow-hint">
-                    This creates a local demo record, not an official complaint.
+                    This creates a record, not an official complaint.
                     No information is sent to AICTE.
                   </p>
                   {fileError && (
@@ -331,12 +331,12 @@ export function ComplaintFlow() {
                   </button>
                 ) : (
                   <span className="flow-hint">
-                    No account or live service required
+                    Choose the institution related to your complaint
                   </span>
                 )}
                 <button className="button primary" type="submit">
                   {step === 3
-                    ? "Submit demo complaint"
+                    ? "Submit complaint"
                     : step === 2
                       ? "Review complaint"
                       : `Continue to ${complaintSteps[step + 1].toLowerCase()}`}{" "}
@@ -360,13 +360,12 @@ export function ComplaintFlow() {
             <li>Include supporting evidence if available.</li>
           </ol>
           <div className="flow-memory-note">
-            <strong>A temporary demo</strong>
+            <strong>Your draft</strong>
             <p>
-              Use fictional information and sample files. Draft text is saved
+              Draft text is saved
               in this browser tab and clears when the tab closes or you submit.
               Selected evidence files must be reselected after a reload.
-              Submitted demo records are shared with the officer workspace in
-              this browser session and clear on refresh.
+              {mode === "persistent" ? "Submitted complaints are saved to your account." : "Submitted records are available in this browser session and clear on refresh."}
             </p>
           </div>
         </aside>

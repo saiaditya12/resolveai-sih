@@ -1,3 +1,4 @@
+import * as presentation from "../src/lib/presentation.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
@@ -40,6 +41,7 @@ for (const role of ["student", "officer", "admin"]) for (const workspace of ["st
 test("officer without assigned cell sees configuration state, never route content", async () => {
   const layout = load("../src/app/officer/layout.tsx", {
     "react/jsx-runtime": jsx,
+    "@/lib/presentation": presentation,
     "@/lib/cells": cells,
     "@/components/officer/OfficerDemoProvider": { OfficerDemoProvider: ({children}) => children },
     "@/components/officer/OfficerNav": { OfficerNav: () => null },

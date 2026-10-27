@@ -2,7 +2,7 @@ export const site = {
   name: "ResolveAI",
   project: "SIH26264",
   description:
-    "A clearer path from grievance to resolution. A Smart India Hackathon concept for institution-related complaints.",
+    "An intelligent grievance routing, tracking and monitoring platform.",
 };
 export const journey = [
   [
@@ -13,31 +13,31 @@ export const journey = [
   [
     "Complaint understood",
     "Context before classification.",
-    "The planned intelligence layer would identify the issue, institution and information needed to move forward.",
+    "The intelligence layer identifies the issue, institution and information needed to move forward.",
   ],
   [
     "Correct cell identified",
     "A path, not a guessing game.",
-    "Configured responsibility paths would help identify the appropriate cell. All mappings shown here are illustrative.",
+    "Configured responsibility paths help identify the appropriate cell. All mappings shown here are illustrative.",
   ],
   [
     "Case assigned",
     "Someone owns the next step.",
-    "A designated officer would receive the case, its context and a response timeline.",
+    "A designated officer receives the case, its context and a response timeline.",
   ],
   [
     "Officer takes action",
     "From an inbox to an outcome.",
-    "Officers could review evidence, request clarification and record the action taken.",
+    "Officers can review evidence, request clarification and record the action taken.",
   ],
   [
     "Student tracks progress",
     "No more wondering what happened.",
-    "The complainant would see the current owner, latest action and any requests for information.",
+    "The complainant sees the current owner, latest action and any requests for information.",
   ],
   [
     "Complaint resolved",
     "A recorded outcome. A closed loop.",
-    "The final decision and resolution would be shared with the complainant, with a visible case history.",
+    "The final decision and resolution is shared with the complainant, with a visible case history.",
   ],
 ];

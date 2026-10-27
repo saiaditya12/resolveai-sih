@@ -40,15 +40,15 @@ export function Journey() {
               <em>A connected journey.</em>
             </h2>
             <p>
-              The proposed workflow keeps responsibility and progress in view,
+              The workflow keeps responsibility and progress in view,
               from the first word to the final outcome.
             </p>
           </div>
           <div className="journey-layout">
             <div className="journey-map">
               <div className="journey-map-head">
-                <span className="eyebrow">CASE DEMO-024</span>
-                <span className="demo-badge">CONCEPT</span>
+                <span className="eyebrow">CASE GRV-024</span>
+                <span className="demo-badge">CASE JOURNEY</span>
               </div>
               <div className="station-track">
                 <span className="journey-parcel" aria-hidden="true">

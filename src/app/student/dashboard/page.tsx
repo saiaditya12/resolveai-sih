@@ -1,18 +1,23 @@
 "use client";
 import { useStudentDemo } from "@/components/student/StudentDemoProvider";
 import Link from "next/link";
-import { demoStudent } from "@/lib/demo-student";
+import { useComplaintStore } from "@/components/ComplaintStoreProvider";
 import { DashboardMetrics } from "@/components/student/DashboardMetrics";
 import { ComplaintList } from "@/components/student/ComplaintList";
 import { RecentActivity } from "@/components/student/RecentActivity";
 export default function StudentDashboard() {
   const { complaints } = useStudentDemo();
+  const { profile } = useComplaintStore();
   return (
     <>
       <div className="dashboard-heading">
         <div>
           <p className="eyebrow">YOUR VOICE, IN VIEW</p>
-          <h1>Hello, {demoStudent.name.split(" ")[0]}.</h1>
+          <h1>
+            {profile?.display_name?.trim()
+              ? `Hello, ${profile.display_name.trim()}.`
+              : "Your complaints, in view."}
+          </h1>
           <p>Here’s where your grievances stand.</p>
         </div>
         <Link className="button primary" href="/student/complaints/new">
@@ -44,11 +49,9 @@ export default function StudentDashboard() {
             <em>makes a difference.</em>
           </h2>
           <p>
-            Keep relevant dates, receipts and correspondence ready. You can try
-            the local demo submission flow with fictional information and sample
-            evidence.
+            Keep relevant dates, receipts and correspondence ready to support your complaint.
           </p>
-          <span className="demo-badge">LOCAL DEMO · NO SERVER STORAGE</span>
+          <span className="demo-badge">COMPLAINT GUIDANCE</span>
         </aside>
       </div>
     </>

@@ -18,6 +18,7 @@ import {
 import { RelatedComplaints } from "./RelatedComplaints";
 import { OfficerActionPanel } from "./OfficerActionPanel";
 import { useComplaintStore } from "@/components/ComplaintStoreProvider";
+import { institutionResponseDisplayText } from "@/lib/presentation";
 export function OfficerCase({ id }: { id: string }) {
   const { cases, act, basePath, cellName } = useOfficerDemo();
   const { mode } = useComplaintStore();
@@ -42,12 +43,12 @@ export function OfficerCase({ id }: { id: string }) {
   if (!item)
     return (
       <section className="officer-panel officer-empty">
-        <p className="eyebrow">{mode === "persistent" ? "CASE NOT FOUND" : "DEMO CASE NOT FOUND"}</p>
+        <p className="eyebrow">{mode === "persistent" ? "CASE NOT FOUND" : "CASE NOT FOUND"}</p>
         <h1>This case is not available in your workspace.</h1>
         <p>
           {mode === "persistent"
             ? "The case may have transferred to another cell. Reload your queue to check current ownership."
-            : "This case may have been cleared when the browser session ended or was refreshed. Demo student submissions are shared only in this browser session."}
+            : "This case may have been cleared when the browser session ended or was refreshed. Student submissions are shared only in this browser session."}
         </p>
         <Link className="button primary" href={`${basePath}/queue`}>
           Back to complaint queue ↗
@@ -70,7 +71,7 @@ export function OfficerCase({ id }: { id: string }) {
           ? "This complaint and its audit history are persisted. No institution or authority is contacted."
           : item.intelligence
             ? "This complaint and its officer actions are shared with the student tracking view in browser memory only. No institution or authority is contacted."
-            : "Seeded summaries, evidence metadata, routing and institution signals are fictional. Actions update this officer sandbox only; no student, institution or authority is contacted."}
+            : "Review the case context and evidence before taking action. No external notifications are sent."}
       </p>
       <p
         ref={confirmation}
@@ -85,7 +86,7 @@ export function OfficerCase({ id }: { id: string }) {
           <p className="eyebrow">
             {mode === "persistent"
               ? "CASE CONTROLS / AUTHORIZED OFFICER"
-              : "CASE CONTROLS / LOCAL DEMO"}
+              : "CASE CONTROLS"}
           </p>
           <h2>Move the case forward.</h2>
           <div>
@@ -117,7 +118,7 @@ export function OfficerCase({ id }: { id: string }) {
             <p className="officer-fine">
               {mode === "persistent"
                 ? "This case is finalised. Further workflow actions are disabled."
-                : "This case is finalised in memory. Actions are disabled; refresh to restore the original demo dataset."}
+                : "This case is finalised in memory. Actions are disabled; refresh to restore the original dataset."}
             </p>
           )}
         </section>
@@ -125,7 +126,7 @@ export function OfficerCase({ id }: { id: string }) {
           <CaseSummaryPanel item={item} />
           {item.resolution && (
             <section className="officer-panel officer-resolution">
-              <p className="eyebrow">✓ RESOLVED / DEMO OUTCOME</p>
+              <p className="eyebrow">✓ RESOLVED / OUTCOME</p>
               <h2>A decision on record.</h2>
               <p className="officer-preserve">{item.resolution.summary}</p>
               <dl className="officer-facts">
@@ -149,9 +150,9 @@ export function OfficerCase({ id }: { id: string }) {
           <StudentResponsesPanel item={item} />
           {item.institutionResponse && (
             <section className="officer-panel">
-              <p className="eyebrow">INSTITUTION RESPONSE / PREWRITTEN DEMO</p>
+              <p className="eyebrow">INSTITUTION RESPONSE</p>
               <h2>What the institution said.</h2>
-              <p>{item.institutionResponse.text}</p>
+              <p>{institutionResponseDisplayText(item.institutionResponse.text)}</p>
               <p className="officer-fine">
                 {formatEventTime(item.institutionResponse.at)} IST · No real
                 response was received.
@@ -182,7 +183,7 @@ export function OfficerCase({ id }: { id: string }) {
             setMessage(
               mode === "persistent"
                 ? "Action saved to the complaint audit history."
-                : "Demo action recorded in memory. The case and its history are updated; nothing was sent externally.",
+                : "Action recorded in memory. The case and its history are updated; nothing was sent externally.",
             );
           }}
         />

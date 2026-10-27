@@ -37,7 +37,7 @@ export function EvidenceUploader({
       }
       if (next.length >= MAX_FILES) {
         messages.push(
-          `${file.name}: select up to ${MAX_FILES} files in this demo.`,
+          `${file.name}: select up to ${MAX_FILES} files in this workspace.`,
         );
         continue;
       }
@@ -92,8 +92,7 @@ export function EvidenceUploader({
       </div>
       <p id="evidence-local" className="flow-callout">
         Selected locally, not uploaded. Files stay in browser memory and are
-        released after demo submission or when you leave this form. Use sample
-        documents only.
+        released after submission or when you leave this form. Only file metadata is retained.
       </p>
       <div role="alert">
         {errors.map((error, index) => (

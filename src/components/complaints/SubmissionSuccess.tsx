@@ -1,3 +1,4 @@
+import { cellDisplayName } from "@/lib/presentation";
 import Link from "next/link";
 import type { LocalComplaint } from "@/lib/complaint-flow";
 import { StatusBadge } from "@/components/student/StatusBadge";
@@ -32,7 +33,7 @@ export function SubmissionSuccess({
         ? "Complaint received. Manual routing review required."
         : intelligence?.source === "Fallback Rules"
           ? "Complaint received. Routing was determined using fallback rules."
-          : "Complaint received and routed using the configured demo mapping.";
+          : "Complaint received and routed using the configured mapping.";
 
   return (
     <section className="submission-success" aria-busy={analysisPending}>
@@ -42,7 +43,7 @@ export function SubmissionSuccess({
       <span className="demo-badge">
         {mode === "persistent"
           ? "SAVED TO YOUR ACCOUNT · NOT SENT TO AICTE"
-          : "DEMO SUBMISSION · NOT SENT TO AICTE"}
+          : "COMPLAINT RECEIVED"}
       </span>
       <h2>Complaint submitted.</h2>
       <p
@@ -75,7 +76,7 @@ export function SubmissionSuccess({
             </div>
             <div>
               <dt>Routing</dt>
-              <dd>{routingLabel}</dd>
+              <dd>{cellDisplayName(routingLabel)}</dd>
             </div>
             <div>
               <dt>Routing status</dt>
@@ -111,7 +112,7 @@ export function SubmissionSuccess({
           </dl>
           {intelligence?.needsManualReview && (
             <p className="flow-hint">
-              This complaint is visible to the demo review queue. No cell-specific
+              This complaint is visible to the review queue. No cell-specific
               recommendation was assigned.
             </p>
           )}
@@ -120,7 +121,7 @@ export function SubmissionSuccess({
       <p className="flow-callout">
         {mode === "persistent"
           ? "Your complaint remains in your account after refresh. Evidence file contents are not uploaded; only metadata is stored."
-          : "Available while navigating between the student and officer demo workspaces in this browser session. Refreshing or closing the tab clears your demo cases. Complaint text is sent to server-side analysis; evidence files are not uploaded."}
+          : "Available while navigating between the student and officer workspaces in this browser session. Refreshing or closing the tab clears your cases. Complaint text is sent to server-side analysis; evidence files are not uploaded."}
       </p>
       <div className="actions">
         <Link

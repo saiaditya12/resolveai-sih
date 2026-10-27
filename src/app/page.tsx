@@ -42,8 +42,7 @@ export default function Home() {
               </a>
             </div>
             <p className="small-note">
-              Explore the concept. Submission and live tracking are coming in a
-              later phase.
+              Sign in to raise a complaint and follow its progress.
             </p>
             <span className="cta-mark" aria-hidden="true">
               ↗
@@ -57,9 +56,9 @@ export default function Home() {
           <span className="brand-tag">/ a clearer path forward</span>
         </a>
         <p>
-          {site.project} · Smart India Hackathon concept
+          {site.project} · Smart India Hackathon
           <br />
-          Independent prototype. Not an official AICTE service.
+          An intelligent grievance routing, tracking and monitoring platform.
         </p>
         <a className="text-link" href="#">
           Back to top ↑

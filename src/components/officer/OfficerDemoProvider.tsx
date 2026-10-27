@@ -1,4 +1,5 @@
 "use client";
+import { cellDisplayName } from "@/lib/presentation";
 import {
   createContext,
   useContext,
@@ -26,9 +27,9 @@ export function OfficerDemoProvider({ children, trustedProfile, workspace = "off
   const store = useComplaintStore();
   const profile: AppProfile = store.mode === "persistent"
     ? (store.profile ?? trustedProfile ?? { id: "", display_name: "", role: "officer", cell_id: null })
-    : { id: "demo-officer-1", display_name: "Demo Officer", role: workspace, cell_id: workspace === "admin" ? null : "student" };
+    : { id: "demo-officer-1", display_name: "", role: workspace, cell_id: workspace === "admin" ? null : "student" };
   const basePath = workspace === "admin" ? "/admin" : "/officer";
-  const cellName = getReviewCell(profile.cell_id)?.name ?? "No review cell assigned";
+  const cellName = cellDisplayName(getReviewCell(profile.cell_id)?.name ?? "No review cell assigned");
   const [cases, setCases] = useState(
     store.mode === "demo" ? officerSeedCases : [],
   );

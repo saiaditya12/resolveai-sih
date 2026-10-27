@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { institutionDisplayName } from "@/lib/presentation";
 import { useOfficerDemo } from "./OfficerDemoProvider";
 import { useMemo } from "react";
 import type { ComplaintQueueItem } from "@/lib/officer-model";
@@ -29,10 +30,10 @@ export function RelatedComplaints({
   }, [item, cases]);
   return (
     <section className="officer-panel" aria-label="Related Complaints">
-      <p className="eyebrow">LOCAL CASE CONTEXT</p>
+      <p className="eyebrow">COMPLAINT CONTEXT</p>
       <h2>Related Complaints</h2>
       <p className="officer-fine">
-        Content-based suggestions from this demo dataset. No AI matching,
+        Content-based suggestions from this dataset. No AI matching,
         automatic merging or routing. Up to {similarityPolicy.limit} matches
         from the {similarityPolicy.windowDays} days ending{" "}
         {formatDemoDate(asOf)}.
@@ -42,7 +43,7 @@ export function RelatedComplaints({
           <h3>Repeated Issue Pattern</h3>
           <p>
             {pattern.count} complaints with related issues at{" "}
-            {pattern.institution}.
+            {institutionDisplayName(pattern.institution)}.
           </p>
           <p>
             {pattern.category} · Within {pattern.windowDays} days ending{" "}
@@ -64,7 +65,7 @@ export function RelatedComplaints({
                     {record.id} · {relationshipLabels[match.relationship]}
                   </span>
                   <strong>{record.title} ↗</strong>
-                  <p>{record.institution}</p>
+                  <p>{institutionDisplayName(record.institution)}</p>
                   <p>
                     {record.category} · {Math.round(match.score * 100)}% match
                   </p>

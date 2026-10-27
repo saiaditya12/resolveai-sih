@@ -110,23 +110,23 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     <>
       <span className="demo-badge">
         {persistent
-          ? "SUPABASE ACCOUNT ACCESS"
-          : "DEMO ACCESS · NO REAL AUTHENTICATION"}
+          ? "ACCOUNT ACCESS"
+          : "WORKSPACE ACCESS"}
       </span>
       <h2>{register ? "Make room for your voice." : "Welcome back."}</h2>
       <p className="auth-intro">
         {register
           ? persistent
             ? "Create a student account with email and password."
-            : "Preview a student account. No account will be created."
+            : "Account services are unavailable here. Continue to the student workspace without an account."
           : persistent
             ? "Sign in to your account to continue."
-            : "Explore your student workspace with a demo sign-in."}
+            : "Open the student workspace to explore its features."}
       </p>
       <p className="auth-demo-note">
         {persistent
-          ? "Passwords are handled by Supabase Auth. Account access is assigned from your stored profile."
-          : "Use fictional details and a made-up password. Nothing you enter is stored or sent."}
+          ? "Your account keeps your complaints and responses together."
+          : "Account services are unavailable here. Nothing you enter is stored or sent."}
       </p>
       <form noValidate onSubmit={submit} className="auth-form">
         {register && (
@@ -136,7 +136,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               id="name"
               name="name"
               autoComplete="name"
-              placeholder="e.g. Aarav Sharma"
+              placeholder="Your full name"
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "name-error" : undefined}
             />
@@ -188,7 +188,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             </button>
           </div>
           <p className="field-hint" id="password-hint">
-            Demo only — don’t use a real password.
+             {persistent ? "Use at least 8 characters." : "Authentication is unavailable in this workspace. Do not enter an existing password."}
           </p>
           {errors.password && (
             <p className="field-error" id="password-error">
@@ -234,9 +234,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           type="submit"
         >
           {busy
-            ? "Opening demo…"
+            ? "Opening workspace…"
             : register
-              ? "Create demo account"
+              ? "Create account"
               : "Sign in"}{" "}
           <span aria-hidden="true">↗</span>
         </button>
@@ -250,26 +250,25 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       </p>
       {!register && !persistent && (
         <p className="auth-switch">
-          <Link href="/officer/dashboard">Open Officer Demo ↗</Link>
+          <Link href="/officer/dashboard">Open officer workspace ↗</Link>
           <br />
-          <small>Fictional identity · no authentication required</small>
+          <small>Account services unavailable</small>
         </p>
       )}
       <p className="auth-fixed-profile">
         {persistent
           ? "Your permissions come from your trusted account profile."
-          : "The workspace uses the same fictional student profile for every demo."}
+          : "This workspace has no authenticated account."}
       </p>
       <dialog
         ref={forgot}
         className="preview-dialog"
-        aria-label="Password reset preview"
+        aria-label="Password help"
       >
-        <p className="eyebrow">DEMO NOTICE</p>
-        <h2>No password to reset yet.</h2>
+        <p className="eyebrow">ACCOUNT SUPPORT</p>
+        <h2>Need help signing in?</h2>
         <p>
-          Password recovery will be available when real authentication is added.
-          No reset email is sent in this demo.
+          Password recovery is not available from this form. Contact your account administrator for help. No reset email has been sent.
         </p>
         <button
           className="button primary"

@@ -1,4 +1,5 @@
 "use client";
+import { cellDisplayName, systemDisplayText } from "@/lib/presentation";
 import { useState, useRef, useEffect, type FormEvent } from "react";
 import {
   officerCells,
@@ -130,7 +131,7 @@ export function OfficerActionPanel({
       }}
     >
       <div className="officer-dialog-head">
-        <p className="eyebrow">DEMO ACTION / {item.id}</p>
+        <p className="eyebrow">ACTION / {item.id}</p>
         <button type="button" onClick={onClose} aria-label="Close action panel">
           Close ×
         </button>
@@ -139,11 +140,11 @@ export function OfficerActionPanel({
       <p id="officer-action-note">
         {persistent
           ? "This action is stored with an audit event. No external message is sent and no real authority is contacted."
-          : "Local demonstration only. No message is sent, no real authority is changed, and no data is persisted."}
+          : "Changes are held in this browser session. No external message is sent."}
       </p>
       <form onSubmit={submit} noValidate>
         <p className="officer-error" role="alert" tabIndex={-1} ref={errorBox}>
-          {error}
+          {systemDisplayText(error)}
         </p>
         {kind === "request" && (
           <label>
@@ -182,19 +183,19 @@ export function OfficerActionPanel({
         {kind === "transfer" && (
           <>
             <p className="officer-notice">
-              Prototype routing configuration — fictional cell names only.
+              Choose the cell responsible for the next review.
             </p>
             <label>
-              Destination demo cell
+              Destination cell
               <select value={cell} onChange={(e) => setCell(e.target.value)}>
-                <option value="">Choose a different demo cell</option>
+                <option value="">Choose a different cell</option>
                 {officerCells.map((c) => (
                   <option
                     value={c.id}
                     key={c.id}
                     disabled={c.id === item.cellId}
                   >
-                    {c.name}
+                    {cellDisplayName(c.name)}
                     {c.id === item.cellId ? " (current)" : ""}
                   </option>
                 ))}
@@ -225,7 +226,7 @@ export function OfficerActionPanel({
           />
         </label>
         <p id="officer-text-hint" className="officer-fine">
-          10–2,000 characters. Use fictional information only.
+          10–2,000 characters. Explain the action clearly.
         </p>
         {kind === "request" && (
           <label>
@@ -257,7 +258,7 @@ export function OfficerActionPanel({
               />
             </label>
             <p className="officer-fine">
-              Resolving finalises this local case. Further demo actions will be
+              Resolving finalises this complaint. Further actions will be
               unavailable until the workspace resets.
             </p>
           </>
@@ -270,14 +271,14 @@ export function OfficerActionPanel({
             {savingState
               ? "Saving…"
               : resolving
-                ? persistent ? "Record resolution" : "Resolve demo case"
+                ? persistent ? "Record resolution" : "Resolve case"
                 : kind === "request"
-                  ? persistent ? "Save information request" : "Record demo request"
+                  ? persistent ? "Save information request" : "Record request"
                   : escalating
-                    ? persistent ? "Escalate case" : "Escalate demo case"
+                    ? persistent ? "Escalate case" : "Escalate case"
                     : kind === "transfer"
-                      ? persistent ? "Transfer case" : "Transfer demo case"
-                      : persistent ? "Save status" : "Save demo status"}{" "}
+                      ? persistent ? "Transfer case" : "Transfer case"
+                      : persistent ? "Save status" : "Save status"}{" "}
             ↗
           </button>
         </div>

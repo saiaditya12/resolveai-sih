@@ -105,7 +105,7 @@ export function RoutingVisual() {
       </div>
       <div className="routing-status">
         <div>
-          <span className="eyebrow">COMPLAINT DEMO-024</span>
+          <span className="eyebrow">COMPLAINT GRV-024</span>
           <p>
             <span className="animated-status">{phase}</span>
             <span className="static-status">

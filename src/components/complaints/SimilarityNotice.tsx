@@ -46,7 +46,7 @@ export function DuplicateNotice({
     >
       <h3>Possible duplicate complaint detected.</h3>
       <p>
-        This looks similar to a complaint from your demo profile. You can view
+        This looks similar to a complaint from your account. You can view
         it or continue with this complaint. Nothing will be merged or deleted.
       </p>
       <ul>

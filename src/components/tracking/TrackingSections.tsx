@@ -1,3 +1,4 @@
+import { cellDisplayName, institutionDisplayName, systemDisplayText, auditDisplayText, personDisplayName } from "@/lib/presentation";
 import type { Complaint } from "@/lib/demo-student";
 import { formatDemoDate } from "@/lib/demo-student";
 import { fileSize } from "@/lib/complaint-flow";
@@ -5,7 +6,6 @@ import {
   stages,
   stageState,
   formatEventTime,
-  nextMessage,
   type TrackingCase,
   type EvidenceMetadata,
 } from "@/lib/complaint-tracking";
@@ -20,7 +20,7 @@ export function ComplaintHeader({
     <header className="tracking-header">
       <p className="eyebrow">
         {complaint.id} /{" "}
-        {data.local ? "LOCAL DEMO RECORD" : "FICTIONAL CASE STUDY"}
+        {data.local ? "COMPLAINT RECORD" : "COMPLAINT RECORD"}
       </p>
       <div className="tracking-title">
         <h1>{complaint.title}</h1>
@@ -30,7 +30,7 @@ export function ComplaintHeader({
           {data.resolution ? "✓" : "●"} {data.status}
         </span>
       </div>
-      <p className="tracking-institution">{complaint.institution}</p>
+      <p className="tracking-institution">{institutionDisplayName(complaint.institution)}</p>
       <dl className="tracking-facts">
         <div>
           <dt>
@@ -58,7 +58,7 @@ export function ComplaintHeader({
         </div>
         <div>
           <dt>Responsible authority</dt>
-          <dd>{data.owner?.cell || "Not assigned"}</dd>
+          <dd>{cellDisplayName(data.owner?.cell)}</dd>
         </div>
       </dl>
     </header>
@@ -78,11 +78,11 @@ export function ComplaintTimeline({ data }: { data: TrackingCase }) {
         <span className="tracking-caption">
           {data.local
             ? data.routingStatus === "routed"
-              ? "Analysis and prototype routing recorded"
+              ? "Analysis and routing recorded"
               : data.routingStatus === "manual-review"
                 ? "Manual review recorded"
                 : "Analysis pending"
-            : "Illustrative demo progression"}
+            : "Illustrative progression"}
         </span>
       </div>
       <ol className="case-stages">
@@ -135,8 +135,8 @@ export function ComplaintUnderstanding({ data }: { data: TrackingCase }) {
           <dd>{intelligence.category}</dd>
         </div>
         <div>
-          <dt>Current demo cell</dt>
-          <dd>{data.owner?.cell || "Not assigned"}</dd>
+          <dt>Current responsible cell</dt>
+          <dd>{cellDisplayName(data.owner?.cell)}</dd>
         </div>
         <div>
           <dt>Routing status</dt>
@@ -174,7 +174,7 @@ export function ComplaintUnderstanding({ data }: { data: TrackingCase }) {
       </dl>
       {intelligence.needsManualReview && (
         <p>
-          A demo officer must review the complaint before category-specific
+          An officer must review the complaint before category-specific
           routing. No specific authority has been assigned.
         </p>
       )}
@@ -197,7 +197,17 @@ export function NextActionCard({
         {data.request ? "YOUR ACTION IS REQUIRED" : "THE NEXT STEP"}
       </p>
       <h2 id="next-heading">What happens next?</h2>
-      <p>{nextMessage(data)}</p>
+      <p>{data.resolution
+        ? "An outcome has been recorded. Review the resolution and case history below."
+        : data.request
+          ? "Additional information is needed from you. Review the request below and add a response."
+          : data.response
+            ? "Your response has been recorded. Check the case history for subsequent updates."
+            : data.status === "Submitted"
+              ? "Your complaint has been recorded and is awaiting initial review. No action is required from you."
+              : data.status === "Escalated"
+                ? "Your complaint has been escalated for further review. No action is required from you right now."
+                : "Your complaint is awaiting or undergoing review. No action is required from you right now."}</p>
       {data.request && (
         <div className="request-detail">
           <strong>{data.request.prompt}</strong>
@@ -218,7 +228,7 @@ export function NextActionCard({
       )}
       {data.response && (
         <p className="tracking-confirmation" role="status">
-          ✓ Demo response saved in this workspace only.
+          ✓ Response recorded.
         </p>
       )}
     </section>
@@ -228,11 +238,11 @@ export function CurrentOwnerCard({ data }: { data: TrackingCase }) {
   return (
     <section className="tracking-card owner-card">
       <p className="eyebrow">CURRENT OWNER</p>
-      <h2>{data.owner?.cell || "Awaiting assignment"}</h2>
+      <h2>{cellDisplayName(data.owner?.cell || "Awaiting assignment")}</h2>
       <dl>
         <div>
           <dt>Assigned officer</dt>
-          <dd>{data.owner?.officer || "Not assigned"}</dd>
+          <dd>{personDisplayName(data.owner?.officer || "Not assigned")}</dd>
         </div>
         <div>
           <dt>Responsibility</dt>
@@ -246,8 +256,7 @@ export function CurrentOwnerCard({ data }: { data: TrackingCase }) {
         </div>
       </dl>
       <p className="tracking-caption">
-        Fictional cell and officer names. No official AICTE routing or live
-        assignment.
+        Current responsibility is shown above.
       </p>
     </section>
   );
@@ -261,34 +270,33 @@ export function SlaStatus({ data }: { data: TrackingCase }) {
     <section
       className={`tracking-card sla-card sla-${paused ? "paused" : data.sla.state.toLowerCase().replaceAll(" ", "-")}`}
     >
-      <p className="eyebrow">RESPONSE WINDOW / DEMO</p>
+      <p className="eyebrow">RESPONSE WINDOW</p>
       <span className="sla-state">{paused ? "Paused" : data.sla.state}</span>
-      <h2>{paused ? "Waiting for your information" : data.sla.remaining}</h2>
-      <p>{paused ? "Prototype response clock paused" : data.sla.window}</p>
+      <h2>{paused ? "Waiting for your information" : systemDisplayText(data.sla.remaining)}</h2>
+      <p>{paused ? "Response clock paused" : systemDisplayText(data.sla.window)}</p>
       {data.sla.dueAt && (
         <p>Target: {formatDemoDate(data.sla.dueAt)} · 10:00 am IST</p>
       )}
       {data.sla.state === "Overdue" && (
-        <p>The sample deadline has passed. No escalation is recorded yet.</p>
+        <p>The deadline has passed. No escalation is recorded yet.</p>
       )}
       {data.sla.state === "Escalated" && (
         <p>
-          The sample deadline was exceeded and the case moved to a fictional
-          escalation reviewer.
+          The deadline was exceeded and the case moved to an escalation reviewer.
         </p>
       )}
       {paused && (
         <p>
-          This demo response window is paused while we wait for your requested
+          This response window is paused while we wait for your requested
           information. It resumes after you respond. Your response is visible
-          only in your local demo record.
+          only in your record.
         </p>
       )}
       <p className="tracking-caption">
         {data.sla.dueAt
           ? "Fixed scenario as of 24 Oct 2026, 10:00 am IST. "
           : ""}
-        Illustrative timing only, not AICTE SLA rules or a live countdown.
+        Service-level targets are configurable by the administering authority.
       </p>
     </section>
   );
@@ -303,11 +311,11 @@ export function CaseEvents({ data }: { data: TrackingCase }) {
           <li key={event.id}>
             <div className="event-time">
               <time dateTime={event.at}>{formatEventTime(event.at)} IST</time>
-              <span>{event.actor}</span>
+              <span>{personDisplayName(event.actor)}</span>
             </div>
             <div>
-              <h3>{event.title}</h3>
-              <p>{event.explanation}</p>
+              <h3>{auditDisplayText(event.title)}</h3>
+              <p>{auditDisplayText(event.explanation)}</p>
             </div>
           </li>
         ))}
@@ -342,7 +350,7 @@ export function EvidenceHistory({ data }: { data: TrackingCase }) {
       <p className="tracking-caption">
         {data.local
           ? "Local selection metadata."
-          : "Fictional sample metadata."}{" "}
+          : "File metadata."}{" "}
         No remote files or downloads are available.
       </p>
       <div className="evidence-history-item">
@@ -354,15 +362,15 @@ export function EvidenceHistory({ data }: { data: TrackingCase }) {
         .map((event) => (
           <div className="evidence-history-item" key={event.id}>
             <h3>
-              {event.actor} requested · {formatEventTime(event.at)} IST
+              {personDisplayName(event.actor)} requested · {formatEventTime(event.at)} IST
             </h3>
-            <p>{event.explanation}</p>
+            <p>{auditDisplayText(event.explanation)}</p>
           </div>
         ))}
       {data.response && (
         <div className="evidence-history-item">
           <h3>
-            Student responded locally · {formatEventTime(data.response.at)} IST
+            Student responded · {formatEventTime(data.response.at)} IST
           </h3>
           <p className="tracking-copy">
             {data.response.text ||
@@ -418,7 +426,7 @@ export function ResolvedState({
   if (!data.resolution) return null;
   return (
     <section className="tracking-card resolved-card">
-      <p className="eyebrow">✓ RESOLVED / FICTIONAL OUTCOME</p>
+      <p className="eyebrow">✓ RESOLVED / OUTCOME</p>
       <h2>An outcome, on record.</h2>
       <p>{data.resolution.summary}</p>
       <dl>
@@ -449,7 +457,7 @@ export function ResolvedState({
       <p role="status">
         {feedback
           ? `Your “${feedback}” feedback is saved in memory only. Thank you.`
-          : "Optional demo feedback. Nothing is sent to a server."}
+          : "Optional feedback. Nothing is sent to a server."}
       </p>
     </section>
   );

@@ -10,6 +10,10 @@ import {
 } from "@/lib/supabase/server";
 import { mapPersistentComplaint } from "./mapper";
 import type { SharedComplaintRecord } from "@/lib/complaint-store";
+import {
+  getInstitutionComplaintStats,
+  type InstitutionComplaintStats,
+} from "@/lib/patterns/institution-stats";
 
 const MAX_API_BYTES = 64 * 1024;
 
@@ -161,6 +165,56 @@ export async function loadPersistentComplaints(
       evidence: evidenceById.get(row.id),
       responses: responsesById.get(row.id),
     }),
+  );
+}
+
+export async function loadPersistentInstitutionStats(
+  institution: string,
+): Promise<InstitutionComplaintStats> {
+  const supabase = createSupabaseAdminClient();
+  const pageSize = 1000;
+  const records: {
+    id: string;
+    institution: string;
+    status: string;
+    submitted_at: string;
+    category: string;
+    priority: string;
+  }[] = [];
+  let afterId = "";
+  while (true) {
+    let query = supabase
+      .from("complaints")
+      .select("id,institution,status,submitted_at,category,priority")
+      .order("id", { ascending: true })
+      .limit(pageSize);
+    if (afterId) query = query.gt("id", afterId);
+    const { data, error } = await query;
+    if (error) throw new Error("Could not load institution statistics.");
+    records.push(
+      ...(data ?? []).map((row) => ({
+        id: row.id,
+        institution: row.institution,
+        status: row.status,
+        submitted_at: row.submitted_at,
+        category: row.category,
+        priority: row.priority,
+      })),
+    );
+    if (!data || data.length < pageSize) break;
+    afterId = data[data.length - 1].id;
+  }
+  const asOf = new Date().toISOString();
+  return getInstitutionComplaintStats(
+    records.map((record) => ({
+      institution: record.institution,
+      status: record.status,
+      submittedAt: record.submitted_at,
+      category: record.category,
+      priority: record.priority,
+    })),
+    institution,
+    asOf,
   );
 }
 

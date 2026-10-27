@@ -2,7 +2,7 @@ const capabilities = [
   [
     "Smart routing",
     "Understand the issue. Find the responsibility.",
-    "A planned understanding layer would match the grievance to configured responsibility paths, with officer oversight.",
+    "An understanding layer matches the grievance to configured responsibility paths, with officer oversight.",
   ],
   [
     "Similar complaint detection",
@@ -39,7 +39,7 @@ export function Intelligence() {
           Designed to support the people resolving grievances. Not to replace
           their judgement.
         </p>
-        <span className="demo-badge">PLANNED CAPABILITIES</span>
+        <span className="demo-badge">COMPLAINT INTELLIGENCE</span>
       </div>
       <div className="capability-list">
         {capabilities.map(([title, heading, copy], i) => (
@@ -102,7 +102,7 @@ export function Patterns() {
             </svg>
           </div>
           <div className="pattern-result">
-            <span className="demo-badge">DEMO SCENARIO · FICTIONAL DATA</span>
+            <span className="demo-badge">ROUTING OVERVIEW</span>
             <p className="eyebrow">↗ EMERGING PATTERN</p>
             <h3>
               Refund-related

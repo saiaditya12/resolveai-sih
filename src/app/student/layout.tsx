@@ -20,16 +20,16 @@ export default async function StudentLayout({ children }: { children: ReactNode 
             <span>Student Portal</span>
             <span className="demo-badge">
               {persistent
-                ? "PERSISTENT ACCOUNT · NOT AN OFFICIAL SERVICE"
-                : "DEMO WORKSPACE · NO OFFICIAL SERVICES"}
+                ? "ACCOUNT WORKSPACE"
+                : "STUDENT WORKSPACE"}
             </span>
           </header>
           <main id="student-main">{children}</main>
           <div className="student-bottom-note">
-            Independent SIH concept · Not an official AICTE service.{" "}
+            ResolveAI · A clearer path to resolution.{" "}
             {persistent
-              ? "Records are stored in the configured Supabase project."
-              : "Demo records clear when the browser session ends."}
+              ? "Your complaints and responses are saved to your account."
+              : "Records clear when the browser session ends."}
           </div>
         </div>
       </div>

@@ -1,5 +1,10 @@
 import { compareComplaints, corpusClock } from "../similarity/similarity.ts";
 import { normalizeText } from "../similarity/normalize.ts";
+import { normalizeInstitutionName } from "../presentation.ts";
+import {
+  getInstitutionComplaintStats,
+  isInstitutionComplaintOpen,
+} from "./institution-stats.ts";
 import type {
   InstitutionComplaintHistory,
   InstitutionPatternComplaint,
@@ -13,17 +18,6 @@ import {
 } from "./trend.ts";
 
 const DAY_MS = 86400000;
-const priorities = ["Critical", "High", "Medium", "Low"] as const;
-const openStatuses = new Set([
-  "Submitted",
-  "Initial Review",
-  "Routed",
-  "Assigned",
-  "Officer Review",
-  "Student Action Required",
-  "Institution Response Requested",
-  "Escalated",
-]);
 const issueSignalRules: Array<{
   label: string;
   pattern: RegExp;
@@ -188,8 +182,8 @@ function buildClusters(
         for (const [id, candidate] of remaining) {
           if (
             compareComplaints(current, candidate) &&
-            normalizeText(current.institution) ===
-              normalizeText(candidate.institution)
+            normalizeInstitutionName(current.institution) ===
+              normalizeInstitutionName(candidate.institution)
           ) {
             group.push(candidate);
             queue.push(candidate);
@@ -216,49 +210,34 @@ export function getInstitutionComplaintHistory(
 ): InstitutionComplaintHistory {
   const unique = uniqueRecords(records).filter(
     (record) =>
-      normalizeText(record.institution) === normalizeText(institution),
+      normalizeInstitutionName(record.institution) ===
+      normalizeInstitutionName(institution),
+  );
+  const stats = getInstitutionComplaintStats(
+    unique.map((record) => ({
+      institution: record.institution,
+      submittedAt: record.submittedAt,
+      status: record.status,
+      category: record.category,
+      priority: record.priority,
+    })),
+    institution,
+    asOf,
   );
   const date = Date.parse(asOf);
-  const recentRecords = unique.filter((record) =>
-    withinWindow(
-      record.submittedAt,
-      asOf,
-      policy.categoryWindowDays,
-    ),
-  );
   const historyRecords = unique.filter((record) =>
     withinWindow(record.submittedAt, asOf, policy.historyWindowDays),
   );
-  const categoryCounts = new Map<string, number>();
-  for (const record of historyRecords) {
-    const category = detectedCategory(record);
-    categoryCounts.set(category, (categoryCounts.get(category) ?? 0) + 1);
-  }
-  const topCategory = [...categoryCounts.entries()].sort(
-    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-  )[0]?.[0] ?? "None";
-  const open = historyRecords.filter((record) =>
-    openStatuses.has(record.status),
-  ).length;
   return {
     institution,
-    total: historyRecords.length,
-    recentCount: recentRecords.length,
-    open,
-    resolved: historyRecords.filter((record) =>
-      ["Resolved", "Closed"].includes(record.status),
-    ).length,
-    escalated: historyRecords.filter(
-      (record) => record.status === "Escalated",
-    ).length,
-    topCategory,
-    statusBreakdown: countBreakdown(historyRecords, "status"),
-    priorityBreakdown: Object.fromEntries(
-      priorities.map((priority) => [
-        priority,
-        historyRecords.filter((record) => record.priority === priority).length,
-      ]),
-    ),
+    total: stats.total,
+    recentCount: stats.recentCount,
+    open: stats.open,
+    resolved: stats.resolved,
+    escalated: stats.escalated,
+    topCategory: stats.topCategory,
+    statusBreakdown: stats.statusBreakdown,
+    priorityBreakdown: stats.priorityBreakdown,
     clusters: Number.isFinite(date)
       ? buildClusters(historyRecords, asOf)
       : [],
@@ -285,9 +264,12 @@ export function getInstitutionSignals(
   openCount: number;
 }> {
   const institutions = [
-    ...new Set(
-      uniqueRecords(records).map((record) => record.institution),
-    ),
+    ...new Map(
+      uniqueRecords(records).map((record) => [
+        normalizeInstitutionName(record.institution),
+        record.institution,
+      ]),
+    ).values(),
   ];
   return institutions
     .flatMap((institution) => {
@@ -299,7 +281,7 @@ export function getInstitutionSignals(
           cluster,
           openCount: cluster.complaintIds.filter((id) => {
             const record = records.find((candidate) => candidate.id === id);
-            return record && openStatuses.has(record.status);
+            return record && isInstitutionComplaintOpen(record.status);
           }).length,
         }));
     })

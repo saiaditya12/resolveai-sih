@@ -12,6 +12,8 @@ ResolveAI is a Smart India Hackathon prototype for managing student grievances. 
 
 All sample institutions, complaints, people, and metrics are fictional. Routing cells and SLA values are illustrative prototype data, not official AICTE mappings or policies.
 
+Institution history matches the persisted `complaints.institution` text because the current schema has no stable institution identifier. Matching applies Unicode normalization, case and punctuation folding, whitespace collapsing, and removes the legacy `Demo ` display prefix. Consequently, distinct institutions with the same normalized name cannot be distinguished until the schema gains institution IDs. The authenticated institution-history endpoint returns only aggregate counts and category/status/priority breakdowns; it does not return complaint records.
+
 ## Stack
 
 - Next.js 16, React 19, and TypeScript
